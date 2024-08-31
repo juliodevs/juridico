@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="css/style.css"> <!-- Enlace al archivo CSS -->
+    <title>Juzgados</title>
+</head>
+<body>
+    <div class="container">
+        <nav class="navigation">
+            <ul>
+                <li><a href="index.html">Inicio</a></li>
+                <li><a href="#" id="admin-link">Administración</a>
+                    <ul class="submenu" id="admin-submenu">
+                        <li><a href="juzgados.html" id="juzgados-link">Juzgados</a></li> <!-- Opción "Juzgados" sin "Clientes" -->
+                    </ul>
+                </li>
+            </ul>
+        </nav>
+
+        <div class="content" id="main-content">
+            <h1>Juzgados</h1>
+            <div class="button-container">
+                <!-- Botón Atrás -->
+                <a href="index.html" id="atras-link">
+                    <button id="atras-btn">Atrás</button>
+                </a>
+                <!-- Botón Nuevo Juzgado -->
+                <a href="juzgados.html" id="nuevo-juzdado-link">
+                    <button id="nuevo-juzgado-btn">Nuevo Juzgado</button>
+                </a>
+            </div>
+            <div class="tabla-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Juzgado</th>
+                            <th>Juez</th>
+                            <th>Departamento</th>
+                            <th>Ciudad</th>
+                            <th>Dirección</th>
+                            <th>Teléfono</th>
+                            <th>Email</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabla-juzgados-cuerpo">
+                        <!-- Aquí se insertarán las filas dinámicamente -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="js/juzgadosList.js"></script> <!-- Enlace al archivo JavaScript para cargar los datos -->
+
+</body>
+</html>

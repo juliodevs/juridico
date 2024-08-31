@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="css/style.css"> <!-- Enlace al archivo CSS -->
+    <title>Consulta de Casos</title>
+</head>
+<body>
+    <div class="container">
+        <nav class="navigation">
+            <ul>
+                <li><a href="#" id="admin-link">Administración</a>
+                    <ul class="submenu" id="admin-submenu">
+                        <li><a href="juzgadosList.html" id="juzgados-link">Juzgados</a></li> <!-- Opción "Juzgados" sin "Clientes" -->
+                    </ul>
+                </li>
+                <li>
+                    <a href="#" id="registro-link">Registro</a>
+                    <ul class="submenu" id="registro-submenu">
+                        <li><a href="clientes.html" id="clientes-link">Clientes</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </nav>
+
+        <div class="content" id="main-content">
+            <h1>Consulta de Casos</h1>
+            <form id="consulta-form" aria-label="Formulario de consulta de radicos">
+                <div class="input-container">
+                    <label for="radicado">Número de Radicado:</label>
+                    <input type="text" id="radicado" name="radicado" class="campo-texto" placeholder="Ingrese el número de radicado" required />
+                    <button type="submit" id="buscar-btn" aria-label="Buscar" title="Buscar">
+                        <img src="img/lupa-icono.svg" alt="Buscar" class="icon" />
+                    </button>
+                </div>                
+            </form>
+            <div class="tabla-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Fecha de Última Actuación</th>
+                            <th>Despacho</th>
+                            <th>Sujetos Procesales</th>                    
+                            <th>Última Anotación</th>
+                            <th>Registra Cambio</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabla-cuerpo">
+                        <!-- Aquí se insertarán las filas dinámicamente -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Formulario de Crear Cliente -->
+    <div class="form-container" id="crear-cliente-container" style="display: none;">
+        <h2>Crear Cliente</h2>
+        <form id="crear-cliente-form">
+            <label for="numero-documento">Número de Documento:</label>
+            <input type="text" id="numero-documento" required />
+
+            <label for="nombre">Nombre:</label>
+            <input type="text" id="nombre" required />
+
+            <label for="apellidos">Apellidos:</label>
+            <input type="text" id="apellidos" required />
+
+            <label for="telefono">Teléfono:</label>
+            <input type="text" id="telefono" required />
+
+            <label for="direccion">Dirección:</label>
+            <input type="text" id="direccion" required />
+
+            <label for="ciudad">Ciudad Residencia:</label>
+            <input type="text" id="ciudad" required />
+
+            <div class="action-buttons">
+                <button type="button" id="crear-cliente-btn">Crear Cliente</button>
+                <button type="button" id="exportar-listado-btn">Exportar Listado</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Nueva página para Clientes -->
+    <div class="form-container" id="clientes-container" style="display: none;">
+        <h2>Clientes</h2>
+        <button id="nuevo-cliente-btn">Nuevo Cliente</button>
+        <div class="tabla-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Número Documento</th>
+                        <th>Nombre(s)</th>
+                        <th>Apellidos</th>
+                        <th>Dirección</th>
+                        <th>Teléfono</th>
+                        <th>Ciudad</th>
+                    </tr>
+                </thead>
+                <tbody id="tabla-clientes-cuerpo">
+                    <!-- Aquí se insertarán las filas dinámicamente -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Formulario para nuevo cliente -->
+    <div class="form-container" id="nuevo-cliente-form-container" style="display: none;">
+        <h2>Nuevo Cliente</h2>
+        <form id="nuevo-cliente-form">
+            <label for="nuevo-numero-documento">Número de Documento:</label>
+            <input type="text" id="nuevo-numero-documento" required />
+
+            <label for="nuevo-nombre">Nombre:</label>
+            <input type="text" id="nuevo-nombre" required />
+
+            <label for="nuevo-apellidos">Apellidos:</label>
+            <input type="text" id="nuevo-apellidos" required />
+
+            <label for="nuevo-telefono">Teléfono:</label>
+            <input type="text" id="nuevo-telefono" required />
+
+            <label for="nuevo-direccion">Dirección:</label>
+            <input type="text" id="nuevo-direccion" required />
+
+            <label for="nuevo-ciudad">Ciudad Residencia:</label>
+            <input type="text" id="nuevo-ciudad" required />
+
+            <div class="action-buttons">
+                <button type="submit" id="guardar-cliente-btn">Guardar Cliente</button>
+                <button type="button" id="cancelar-btn">Cancelar</button>
+            </div>
+        </form>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="js/script.js"></script> <!-- Enlace al archivo JavaScript -->
+</body>
+</html>

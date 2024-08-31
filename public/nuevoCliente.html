@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="css/stylesFormRegistro.css"> <!-- Enlace al archivo CSS -->
+    <title>Nuevo Cliente</title>
+</head>
+<body>
+    <div class="container">
+        <div class="form-container" id="nuevo-cliente-form-container">
+            <h2>Nuevo Cliente</h2>
+            
+            <!-- Botón Atrás -->
+            <div class="button-container">
+                <a href="clientes.html" id="atras-btn">Atrás</a> <!-- Enlace al botón Atrás -->
+            </div>
+
+            <form id="nuevo-cliente-form">
+                <label for="nuevo-numero-documento">Número de Documento:</label>
+                <input type="text" id="nuevo-numero-documento" required />
+
+                <label for="nuevo-nombre">Nombre:</label>
+                <input type="text" id="nuevo-nombre" required />
+
+                <label for="nuevo-apellidos">Apellidos:</label>
+                <input type="text" id="nuevo-apellidos" required />
+
+                <label for="nuevo-telefono">Teléfono:</label>
+                <input type="text" id="nuevo-telefono" required />
+
+                <label for="nuevo-direccion">Dirección:</label>
+                <input type="text" id="nuevo-direccion" required />
+
+                <label for="nuevo-ciudad">Ciudad Residencia:</label>
+                <input type="text" id="nuevo-ciudad" required />
+
+                <div class="action-buttons">
+                    <button type="submit" id="guardar-cliente-btn">Guardar Cliente</button>
+                    <button type="button" id="cancelar-btn">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="js/clientes.js"></script> <!-- Enlace al archivo JavaScript -->
+</body>
+</html>

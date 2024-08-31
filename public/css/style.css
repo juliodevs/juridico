@@ -1,0 +1,251 @@
+/* Reset de estilos básicos */
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f8f9fa; /* Gris muy claro para el fondo */
+    margin: 0;
+    padding: 0;
+    color: #333; /* Color de texto oscuro */
+    display: flex; /* Usar flexbox para el body */
+    height: 100vh; /* Altura completa para el body */
+    overflow: hidden; /* Ocultar el scroll si hay */
+}
+
+/* Contenedor principal */
+.container {
+    display: flex; /* Usar flex para el contenedor */
+    flex-grow: 1; /* Permitir que el contenedor principal crezca */
+    width: 100%; /* Ancho completo del viewport */
+}
+
+/* Estilos para la navegación */
+.navigation {
+    width: 200px; /* Ancho de la barra de navegación */
+    background-color: #4a4a4a; /* Fondo oscuro */
+    color: white;
+    padding: 10px;
+    position: sticky; /* Mantener el menú visible al hacer scroll */
+    height: 100vh; /* Altura completa */
+}
+
+.navigation ul {
+    list-style: none; /* Sin viñetas */
+    padding: 0; /* Sin padding */
+}
+
+.navigation a {
+    color: white;
+    text-decoration: none; /* Eliminar subrayado */
+    display: block; /* Mostrar como bloque */
+    padding: 10px; /* Espaciado interno */
+}
+
+.navigation a:hover {
+    background-color: #555; /* Color al pasar el mouse */
+}
+
+/* Submenú */
+.submenu {
+    list-style: none;
+    padding-left: 10px; /* Sangría para mostrar jerarquía */
+    display: none; /* Comienza oculto */
+}
+
+.submenu li {
+    padding: 5px 0; /* Espaciado en los ítems del submenú */
+}
+
+/* Estilo para el contenedor principal del contenido */
+.content {
+    flex-grow: 1; /* Permitir que el contenido use el espacio restante */
+    padding: 20px; /* Espaciado interno */
+    overflow-y: auto; /* Desplazamiento vertical si es necesario */
+    position: relative; /* Necesario para posicionar los botones */
+}
+
+/* Estilo para el título */
+h1 {
+    color: #4a4a4a; /* Gris oscuro para el título */
+    margin-bottom: 20px;
+    text-align: center; /* Centramos el título */
+}
+
+/* Estilo para el formulario */
+form {
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Alinear elementos en el centro */
+}
+
+/* Contenedor para el campo de entrada y la lupa */
+.input-container {
+    display: flex;
+    align-items: center; /* Centra verticalmente los elementos dentro del contenedor */
+    justify-content: center; /* Centra horizontalmente el contenedor */
+    width: 100%; /* Hace que el contenedor de entrada ocupe el 100% */
+    margin-bottom: 20px; /* Espaciado inferior */
+    position: relative; /* Necesario para posicionar el tooltip */
+}
+
+/* Estilo para las etiquetas */
+label {
+    font-weight: bold;
+    margin-right: 10px; /* Espaciado a la derecha para separación */
+    color: #4a4a4a; /* Gris oscuro para las etiquetas */
+}
+
+/* Estilo para el campo de entrada */
+input[type="text"] {
+    width: 200px; /* Ancho fijo para el campo de texto */
+    padding: 10px;
+    margin-right: 5px; /* Margen a la derecha para separar de la lupa */
+    border: 1px solid #ccc; /* Gris claro para el borde */
+    border-radius: 4px;
+    font-size: 16px;
+    background-color: #f8f9fa; /* Color de fondo claro */
+    color: #333; /* Color del texto oscuro */
+    text-align: center; /* Centrar texto dentro del campo */
+}
+
+/* Estilo de enfocar el campo de entrada */
+input[type="text"]:focus {
+    border-color: #007bff; /* Color azul para el enfoque */
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5); /* Sombra azul cuando está en foco */
+}
+
+/* Estilo para el botón de búsqueda */
+button {
+    background-color: transparent; /* Fondo transparente */
+    border: none; /* Sin borde */
+    cursor: pointer; /* Cambia el cursor a mano */
+    position: relative; /* Necesario para el tooltip */
+}
+
+/* Estilo del icono dentro del botón */
+.icon {
+    width: 30px; /* Aumenta el tamaño del icono */
+    height: 30px; /* Aumenta el tamaño del icono */
+    filter: brightness(0); /* Hace que el icono sea negro */
+}
+
+/* Estilo del tooltip */
+.tooltip {
+    display: none; /* Ocultar el tooltip por defecto */
+    position: absolute; /* Posicionar de forma absoluta */
+    top: 100%; /* Colocar el tooltip justo debajo del botón */
+    left: 50%; /* Centrar horizontalmente el tooltip */
+    transform: translateX(-50%); /* Ajustar la posición horizontal del tooltip */
+    background-color: #333; /* Fondo oscuro */
+    color: #fff; /* Texto blanco */
+    padding: 5px 10px; /* Espaciado interno */
+    border-radius: 4px; /* Bordes redondeados */
+    font-size: 14px; /* Tamaño de fuente del tooltip */
+    white-space: nowrap; /* Evitar que el texto se divida en varias líneas */
+    z-index: 10; /* Asegurar que el tooltip esté por encima de otros elementos */
+}
+
+/* Mostrar el tooltip al pasar el mouse sobre el botón */
+button:hover .tooltip {
+    display: block;
+}
+
+/* Estilo del botón al pasar el mouse (opcional) */
+button:hover .icon {
+    opacity: 0.8; /* Cambia la opacidad al pasar el mouse */
+}
+
+/* Estilos para la tabla */
+table {
+    width: 100%;
+    border-collapse: collapse; /* Remover el espacio entre las celdas */
+    margin-top: 120px; /* Aumentar el espacio superior para mover la tabla más abajo */
+    border: 1px solid #ddd; /* Borde ligero alrededor de la tabla */
+}
+
+th, td {
+    padding: 12px; /* Espaciado dentro de las celdas */
+    text-align: center; /* Centrar texto en las celdas de la tabla */
+    border-bottom: 1px solid #ccc; /* Línea divisoria entre filas */
+}
+
+th {
+    background-color: #f2f2f2; /* Fondo claro para la cabecera */
+    font-weight: bold; /* Negrita en la cabecera */
+    border-bottom: 2px solid #bbb; /* Línea divisoria más gruesa debajo de los encabezados */
+}
+
+tr:nth-child(even) {
+    background-color: #f9f9f9; /* Fondo claro para filas pares */
+}
+
+tr:nth-child(odd) {
+    background-color: #ffffff; /* Fondo blanco para filas impares */
+}
+
+th, td {
+    border: 1px solid #ddd; /* Borde ligero alrededor de las celdas */
+}
+
+/* Estilos para la columna "Registra Cambio" */
+.registra-cambio-si,
+.registra-cambio-no {
+    text-align: center; /* Centrar el texto en la columna */
+}
+
+.registra-cambio-si {
+    background-color: rgba(255, 0, 0, 0.3); /* Rojo suave */
+    color: #800000; /* Texto de un rojo oscuro */
+}
+
+.registra-cambio-no {
+    background-color: rgba(0, 128, 0, 0.3); /* Verde suave */
+    color: #005500; /* Texto de un verde oscuro */
+}
+
+/* Estilos para el formulario de crear cliente */
+.form-container {
+    padding: 20px;
+    background-color: #ffffff; /* Fondo blanco */
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    margin-top: 80px; /* Aumentar el espaciado superior para mover el formulario más abajo */
+    position: relative; /* Necesario para la posición del botón */
+}
+
+/* Botones de acción */
+.button-container {
+    display: flex; /* Flexbox para alinear botones */
+    justify-content: space-between; /* Alinear los botones a los extremos */
+    position: absolute; /* Posicionar absolutamente */
+    top: 140px; /* Espacio desde la parte superior */
+    left: 20px; /* Espacio desde la parte izquierda */
+    right: 20px; /* Espacio desde la parte derecha */
+}
+
+/* Estilo para el botón de nuevo */
+#nuevo-cliente-btn,
+#nuevo-juzgado-btn {
+    background-color: #4a4a4a; /* Gris oscuro */
+    color: #f0f0f0; /* Gris muy claro para el texto */
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+/* Ajusta la posición del botón "Nuevo Cliente" para estar más abajo */
+#nuevo-cliente-btn-container {
+    margin-top: 80px; /* Aumentar el espaciado superior para bajar el botón más */
+}
+
+/* Estilo del botón Atrás */
+#atras-btn {
+    background-color: #888888; /* Gris medio */
+    color: #ffffff; /* Texto blanco */
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    position: fixed; /* Fijar el botón en la parte inferior izquierda */
+    bottom: 20px; /* Espacio desde el fondo */
+   
+}

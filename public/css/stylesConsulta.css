@@ -1,0 +1,155 @@
+/* Estilos generales */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f0f0f0;
+    color: #333;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100vh;
+}
+
+/* Estilos para el formulario */
+form#juzgado-form {
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 20px;
+    width: 100%;
+    max-width: 1200px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-wrap: wrap;
+}
+
+/* Estilos para los elementos del formulario */
+form#juzgado-form div {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    margin-bottom: 10px;
+    width: 100%;
+}
+
+form#juzgado-form label {
+    flex: 0 0 150px;
+    font-weight: bold;
+    color: #555;
+}
+
+form#juzgado-form span {
+    flex: 1;
+    text-align: left;
+    padding: 5px;
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+/* Estilos para el contenedor de la tabla */
+#tabla-container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 20px;
+    overflow-x: auto;
+}
+
+/* Estilos para la tabla */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+table, th, td {
+    border: 1px solid #ccc;
+}
+
+th, td {
+    padding: 10px;
+    text-align: left;
+}
+
+th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+    color: #555;
+    text-align: center; /* Centrar los encabezados de la tabla */
+}
+
+tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+tr:hover {
+    background-color: #f1f1f1;
+    cursor: pointer;
+}
+
+/* Estilos responsivos */
+@media (max-width: 600px) {
+    form#juzgado-form {
+        padding: 10px;
+    }
+
+    form#juzgado-form div {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    form#juzgado-form label, form#juzgado-form span {
+        flex: none;
+        width: 100%;
+    }
+
+    form#juzgado-form span {
+        margin-top: 5px;
+    }
+
+    table, th, td {
+        display: block;
+        width: 100%;
+    }
+
+    th, td {
+        box-sizing: border-box;
+    }
+
+    tr {
+        margin-bottom: 10px;
+        display: block;
+    }
+
+    tr:nth-child(even) {
+        background-color: transparent;
+    }
+
+    tr:hover {
+        background-color: transparent;
+    }
+}
+
+/* Estilo del botón Atrás */
+#atras-btn {
+    background-color: #888888; /* Gris medio */
+    color: #ffffff; /* Texto blanco */
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    position: fixed; /* Fijar el botón en la parte inferior izquierda */
+    bottom: 20px; /* Espacio desde el fondo */
+    left: 20px; /* Espacio desde el borde izquierdo */
+    text-decoration: none; /* Eliminar subrayado del enlace */
+}
+
+#atras-btn:hover {
+    background-color: #6c6c6c; /* Gris más oscuro en hover */
+    color: #ffffff; /* Texto blanco en hover */
+}

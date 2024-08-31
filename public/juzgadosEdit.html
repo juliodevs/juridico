@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulario de Juzgados</title>
+    <!-- Referencia al archivo de estilos -->
+    <link rel="stylesheet" href="/css/stylesConsulta.css">
+</head>
+<body>
+    <form id="juzgado-form">
+        <div>
+            <label for="juzgado">Juzgado:</label>
+            <span id="juzgado"></span>
+        </div>
+        <div>
+            <label for="juez">Juez:</label>
+            <span id="juez"></span>
+        </div>
+        <div>
+            <label for="email">Email:</label>
+            <span id="email"></span>
+        </div>
+        <div>
+            <label for="telefono">Teléfono:</label>
+            <span id="telefono"></span>
+        </div>
+        <div>
+            <label for="departamento">Departamento:</label>
+            <span id="departamento"></span>
+        </div>
+        <div>
+            <label for="ciudad">Ciudad:</label>
+            <span id="ciudad"></span>
+        </div>
+    </form>
+    
+    <!-- Contenedor de la tabla -->
+    <div id="tabla-container">
+        <!-- Tabla de casos -->
+        <table>
+            <thead>
+                <tr>
+                    <th>Radicado</th>
+                    <th>Cliente</th>
+                    <th>Teléfono</th>
+                    <th>Dirección</th>
+                    <th>Ciudad</th>
+                </tr>
+            </thead>
+            <tbody id="tabla-juzgados-cuerpo">
+                <!-- Aquí puedes agregar filas de datos dinámicamente -->
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Botón Atrás -->
+    <div class="button-container">
+        <a href="juzgadosList.html" id="atras-btn">Atrás</a>
+    </div>
+    
+    <!-- Referencia al archivo de JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="/js/juzgadosEdit.js"></script>
+</body>
+</html>

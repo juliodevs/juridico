@@ -1,0 +1,149 @@
+/* Reseteo de márgenes y padding */
+* {
+    margin: 0;
+    padding: 0px;
+    box-sizing: border-box;
+}
+
+/* Estilo del contenedor principal */
+.container {
+    display: flex;
+    justify-content: flex-start;
+    align-items: flex-start;
+    height: 100vh;
+    width: 100vw;
+    padding: 40px 20px 20px 20px; /* padding: top right bottom left */
+    background-color: #f5f5f5; /* Gris claro de fondo para toda la página */
+}
+
+/* Estilo del contenedor del formulario */
+.form-container,
+.content {
+    display: flex;
+    flex-direction: column;
+    width: 100%; /* Ocupa el 100% del ancho de la pantalla */
+    height: calc(100vh - 40px); /* Ocupa el alto de la pantalla menos los márgenes */
+    background-color: #ffffff; /* Fondo blanco para el formulario */
+    border-radius: 8px; /* Bordes redondeados */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Sombra más marcada */
+    padding: 20px;
+    margin: 0; /* Elimina márgenes automáticos */
+    overflow-y: auto; /* Permite desplazamiento si el contenido es mayor que la pantalla */
+}
+
+/* Estilo del título */
+h2 {
+    font-size: 24px;
+    margin-bottom: 20px;
+    text-align: center;
+    color: #333333; /* Gris oscuro para el texto del título */
+}
+
+/* Estilo de las etiquetas del formulario */
+label {
+    display: block;
+    font-size: 14px;
+    margin-bottom: 5px;
+    color: #666666; /* Gris medio para las etiquetas */
+}
+
+/* Estilo de los campos del formulario */
+input[type="text"],
+input[type="email"],
+select {
+    width: 100%; /* Ocupa el 100% del ancho del contenedor */
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #cccccc; /* Gris claro para el borde */
+    border-radius: 4px;
+    font-size: 14px;
+    color: #333333; /* Gris oscuro para el texto del campo */
+    background-color: #f9f9f9; /* Gris muy claro para el fondo del campo */
+}
+
+/* Estilo de los botones */
+.action-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 10px; /* Espacio entre los botones */
+    margin-top: 20px;
+}
+
+/* Estilo de los botones individuales */
+button {
+    padding: 10px 20px;
+    font-size: 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    color: #ffffff; /* Color de texto blanco en los botones */
+}
+
+/* Botón de guardar */
+#guardar-cliente-btn,
+#guardar-juzgado-btn {
+    background-color: #4d4d4d; /* Gris oscuro */
+}
+
+#guardar-cliente-btn:hover {
+    background-color: #333333; /* Gris más oscuro en hover */
+}
+
+/* Botón de cancelar */
+#cancelar-btn {
+    background-color: #7d7d7d; /* Gris medio */
+}
+
+#cancelar-btn:hover {
+    background-color: #595959; /* Gris más oscuro en hover */
+}
+
+/* Estilo responsive */
+@media (max-width: 600px) {
+    .container {
+        padding: 10px;
+    }
+
+    .form-container {
+        padding: 15px;
+    }
+
+    input[type="text"] {
+        font-size: 16px;
+    }
+
+    button {
+        font-size: 14px;
+        padding: 8px 16px;
+    }
+}
+
+/* Estilos para el botón Atrás */
+#atras-btn {
+    background-color: #8c8c8c; /* Gris medio */
+    color: #ffffff; /* Texto blanco */
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    text-decoration: none; /* Eliminar subrayado en el enlace */
+    display: inline-block; /* Hacer que el enlace se comporte como un botón */
+    position: fixed; /* Fijar el botón en una posición fija */
+    bottom: 30px; /* Espacio desde el borde inferior */
+    left: 40px; /* Espacio desde el borde izquierdo */
+}
+
+#atras-btn:hover {
+    background-color: #6c6c6c; /* Gris más oscuro en hover */
+    color: #ffffff; /* Texto blanco en hover */
+}
+
+/* Botón de crear nuevo caso */
+#crear-caso-btn {
+    background-color: #4CAF50; /* Verde */
+}
+
+#crear-caso-btn:hover {
+    background-color: #45a049; /* Verde más oscuro en hover */
+}
