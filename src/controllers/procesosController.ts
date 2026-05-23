@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import pool from '../db/pool';
+import { notificar } from '../services/notificationService';
 
 // ── Obtener todos los procesos ────────────────────────────────────────────────
 export const obtenerProcesos = async (
@@ -33,7 +34,48 @@ export const guardarProceso = async (
              VALUES (?, ?, ?, ?, ?, ?)`,
             [sujetosProcesales, radicado, juzgado, idCliente, fecha_audiencia ?? null, estado ?? 'activo']
         );
-        res.status(201).json({ message: 'Proceso guardado exitosamente' });
+
+        // ── Notificación (no bloqueante — un fallo aquí no cancela el guardado) ─
+        let whatsappLink: string | null = null;
+        let advertenciasNotificacion: string[] = [];
+
+        try {
+            // Obtener nombre del cliente para personalizar los mensajes
+            const [clienteRows] = await pool.query(
+                'SELECT CONCAT(nombre, " ", apellidos) AS nombreCliente FROM clientes WHERE id = ?',
+                [idCliente]
+            );
+            const clientes = clienteRows as { nombreCliente: string }[];
+            const nombreCliente = clientes[0]?.nombreCliente;
+
+            const estadoProceso = (estado ?? 'activo') as string;
+            const asunto = `Nuevo proceso registrado: ${radicado}`;
+            const htmlBody = `
+                <div style="font-family: Arial, sans-serif;">
+                    <h2 style="color: #1a56db;">Proceso Registrado</h2>
+                    <p><strong>Radicado:</strong> ${radicado}</p>
+                    <p><strong>Cliente:</strong> ${nombreCliente ?? 'N/A'}</p>
+                    <p><strong>Estado:</strong> ${estadoProceso}</p>
+                    ${fecha_audiencia ? `<p><strong>Fecha de audiencia:</strong> ${fecha_audiencia}</p>` : ''}
+                </div>
+            `;
+
+            const resultado = await notificar(
+                { radicado, nombreCliente, fecha_audiencia: fecha_audiencia ?? null, estado: estadoProceso },
+                asunto,
+                htmlBody
+            );
+            whatsappLink = resultado.whatsappLink;
+            advertenciasNotificacion = resultado.errores;
+        } catch (notifError) {
+            console.error('[procesos] Error en notificación al guardar proceso:', notifError);
+        }
+
+        res.status(201).json({
+            message: 'Proceso guardado exitosamente',
+            whatsappLink,
+            ...(advertenciasNotificacion.length > 0 && { advertencias: advertenciasNotificacion }),
+        });
     } catch (error) {
         next(error);
     }
@@ -64,7 +106,46 @@ export const actualizarProceso = async (
             return;
         }
 
-        res.status(200).json({ message: 'Proceso actualizado exitosamente' });
+        // ── Notificación (no bloqueante) ──────────────────────────────────────
+        let whatsappLink: string | null = null;
+        let advertenciasNotificacion: string[] = [];
+
+        try {
+            const [clienteRows] = await pool.query(
+                'SELECT CONCAT(nombre, " ", apellidos) AS nombreCliente FROM clientes WHERE id = ?',
+                [idCliente]
+            );
+            const clientes = clienteRows as { nombreCliente: string }[];
+            const nombreCliente = clientes[0]?.nombreCliente;
+
+            const estadoProceso = (estado ?? 'activo') as string;
+            const asunto = `Proceso actualizado: ${radicado}`;
+            const htmlBody = `
+                <div style="font-family: Arial, sans-serif;">
+                    <h2 style="color: #1a56db;">Proceso Actualizado</h2>
+                    <p><strong>Radicado:</strong> ${radicado}</p>
+                    <p><strong>Cliente:</strong> ${nombreCliente ?? 'N/A'}</p>
+                    <p><strong>Estado:</strong> ${estadoProceso}</p>
+                    ${fecha_audiencia ? `<p><strong>Fecha de audiencia:</strong> ${fecha_audiencia}</p>` : ''}
+                </div>
+            `;
+
+            const resultado = await notificar(
+                { radicado, nombreCliente, fecha_audiencia: fecha_audiencia ?? null, estado: estadoProceso },
+                asunto,
+                htmlBody
+            );
+            whatsappLink = resultado.whatsappLink;
+            advertenciasNotificacion = resultado.errores;
+        } catch (notifError) {
+            console.error('[procesos] Error en notificación al actualizar proceso:', notifError);
+        }
+
+        res.status(200).json({
+            message: 'Proceso actualizado exitosamente',
+            whatsappLink,
+            ...(advertenciasNotificacion.length > 0 && { advertencias: advertenciasNotificacion }),
+        });
     } catch (error) {
         next(error);
     }

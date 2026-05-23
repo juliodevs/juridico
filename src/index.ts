@@ -27,6 +27,8 @@ import procesosRoutesV1 from './routes/v1/procesosRoutes';
 import juzgadoRoutesV1 from './routes/v1/juzgadoRoutes';
 import departamentoRoutesV1 from './routes/v1/departamentoRoutes';
 import ciudadRoutesV1 from './routes/v1/ciudadRoutes';
+import adminRoutes from './routes/v1/adminRoutes';
+import { iniciarAlertasAudiencias } from './jobs/alertasAudiencias';
 
 const app = express();
 
@@ -74,6 +76,7 @@ app.use(express.static(path.join(__dirname, '../public')));
 
 // ── API v1 (con autenticación JWT) ────────────────────────────────────────────
 app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/admin', adminRoutes);
 app.use('/api/v1', clienteRoutesV1);
 app.use('/api/v1', procesosRoutesV1);
 app.use('/api/v1', juzgadoRoutesV1);
@@ -106,6 +109,8 @@ async function startServer(): Promise<void> {
             console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
             console.log(`   Entorno: ${process.env['NODE_ENV'] ?? 'development'}`);
         });
+        // Iniciar cron de alertas de audiencias (lee hora desde BD)
+        await iniciarAlertasAudiencias();
     } catch (error) {
         console.error('❌ No se pudo conectar a la base de datos:', error);
         process.exit(1);
