@@ -7,6 +7,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const telefono = document.getElementById('nuevo-telefono');
     const direccion = document.getElementById('nuevo-direccion');
     const ciudad = document.getElementById('nuevo-ciudad');
+    const email = document.getElementById('nuevo-email');
+    const radicado = document.getElementById('nuevo-radicado');
 
     // Manejar el evento de envío del formulario
     form.addEventListener('submit', async (event) => {
@@ -19,12 +21,14 @@ document.addEventListener('DOMContentLoaded', () => {
             apellidos: apellidos.value.trim(),
             telefono: telefono.value.trim(),
             direccion: direccion.value.trim(),
-            ciudad: ciudad.value.trim()
+            ciudad: ciudad.value.trim(),
+            email: email.value.trim(),
+            radicado: radicado.value.trim()
         };
 
         try {
             // Enviar los datos al servidor usando axios
-            const response = await axios.post('/api/guardarCliente', clienteData);
+            const response = await axios.post('/api/clientes', clienteData);
             
             // Manejar la respuesta del servidor
             console.log('Cliente guardado exitosamente:', response.data);

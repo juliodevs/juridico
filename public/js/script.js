@@ -1,145 +1,174 @@
-// Crear una instancia de axios con configuración predeterminada
+// ✅ Configuración de Axios
 const api = axios.create({
     baseURL: 'https://consultaprocesos.ramajudicial.gov.co:448/api/v2',
-    headers: {
-        'Content-Type': 'application/json;charset=utf-8',
-    },
-    params: {
-        pagina: 1
-    }
+    headers: { 'Content-Type': 'application/json;charset=utf-8' },
+    params: { pagina: 1 }
 });
 
-// Obtener el formulario de consulta por su ID
-const form = document.getElementById('consulta-form');
+let erroresRadicados = [];
+let contadorFilas = 1; // contador para columna "Número"
 
-if (form) {
-    // Agregar un evento de escucha para el envío del formulario
-    form.addEventListener('submit', async function(event) {
-        event.preventDefault(); // Prevenir el comportamiento predeterminado del formulario
-
-        // Obtener el campo de entrada del radicado por su ID
-        const radicadoInput = document.getElementById('radicado');
-
-        if (radicadoInput) {
-            const radicado = radicadoInput.value; // Obtener el valor del radicado
-
-            // Función para consultar procesos por número de radicado
-            async function getByNameField(radicado, SoloActivos = false) {
-                try {
-                    // Realizar la consulta a la API
-                    const { data } = await api(`/Procesos/Consulta/NumeroRadicacion`, {
-                        params: {
-                            numero: radicado,
-                            SoloActivos
-                        }
-                    });
-
-                    const procesos = data.procesos;
-                    //console.log("Procesos encontrados:", procesos);
-
-                    if (procesos && procesos.length > 0) {
-                        const tablaCuerpo = document.getElementById('tabla-cuerpo');
-                        tablaCuerpo.innerHTML = ''; // Limpiar la tabla antes de agregar nuevas filas
-
-                        for (let i = 0; i < procesos.length; i++) {
-                            const { idProceso, fechaUltimaActuacion, despacho, sujetosProcesales } = procesos[i];
-
-                            // Manejar sujetos procesales como un array
-                            const sujetosProcesalesArray = Array.isArray(sujetosProcesales)
-                                ? sujetosProcesales
-                                : (sujetosProcesales ? [sujetosProcesales] : []);
-                            const procesados = sujetosProcesalesArray.length > 0 ? sujetosProcesalesArray[0] : 'N/A';
-
-                            // Obtener la fecha de hoy y de ayer
-                            const today = new Date();
-                            const yesterday = new Date(today);
-                            yesterday.setDate(today.getDate() - 1);
-                            
-                            const fechaHoy = today.toISOString().split('T')[0]; // yyyy-mm-dd
-                            const fechaAyer = yesterday.toISOString().split('T')[0]; // yyyy-mm-dd
-                            
-                            // Validar si la fecha de última actuación es hoy o ayer
-                            const registraCambioValue = (fechaUltimaActuacion && 
-                                (fechaUltimaActuacion.split('T')[0] === fechaHoy || fechaUltimaActuacion.split('T')[0] === fechaAyer)) ? 'Sí' : 'No';
-                            
-                            // Obtener detalles adicionales del proceso
-                            const { ultimaActuacion } = await getDatils(idProceso);
-                            console.log("Detalles adicionales del proceso:", ultimaActuacion);
-
-                            // Crear una nueva fila en la tabla
-                            const nuevaFila = document.createElement('tr');
-                            nuevaFila.innerHTML = `
-                                <td>${fechaUltimaActuacion || 'N/A'}</td>
-                                <td>${despacho || 'N/A'}</td>
-                                <td>${procesados}</td>                               
-                                <td>${ultimaActuacion.anotacion || 'N/A'}</td>
-                                <td class="${registraCambioValue === 'Sí' ? 'registra-cambio-si' : 'registra-cambio-no'}">${registraCambioValue}</td> <!-- Nueva columna -->
-                            `;
-                            tablaCuerpo.appendChild(nuevaFila);
-                        }
-                        
-                    } else {
-                        console.error("No se encontraron procesos.");
-                        alert("No se encontraron procesos para el número de radicado ingresado."); // Aviso al usuario
-                    }
-
-                } catch (error) {
-                    console.error("Error al consultar el radicado:", error);
-                    alert("Ocurrió un error al consultar el radicado. Por favor, inténtelo de nuevo."); // Aviso al usuario
-                }
-            }
-
-            // Función para obtener detalles adicionales del proceso
-            async function getDatils(idProceso) {
-                try {
-                    const { data } = await api(`/Proceso/Actuaciones/${idProceso}`);
-                    const actuaciones = data.actuaciones;
-                    const ultimaActuacion = actuaciones[0] || { anotacion: 'No hay anotaciones', fechaActuacion: 'N/A' }; // Manejar caso de sin actuaciones
-                    
-                    return { ultimaActuacion };
-                } catch (error) {
-                    console.error("Error al consultar el nuevo endpoint:", error);
-                    return { ultimaActuacion: { anotacion: 'Error en la consulta', fechaActuacion: 'N/A' } };
-                }
-            }
-
-            // Llamar a la función para consultar procesos por número de radicado
-            await getByNameField(radicado);
-        } else {
-            console.error("El elemento de entrada 'radicado' no se encontró.");
-            alert("Por favor, ingrese un número de radicado válido."); // Aviso al usuario
-        }
-    });
-} else {
-    console.error("El formulario 'consulta-form' no se encontró.");
+function delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-// Obtener el enlace de administración y su submenú por sus IDs
-const adminLink = document.getElementById('admin-link');
-const adminSubmenu = document.getElementById('admin-submenu');
+function esReciente(fecha, dias = 3) {
+    const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+    const fechaComparar = new Date(fecha);
+    const diff = (hoy - fechaComparar) / (1000 * 60 * 60 * 24);
+    return diff <= dias;
+}
 
-if (adminLink && adminSubmenu) {
-    // Mostrar/Ocultar el submenú de administración al hacer clic en el enlace
-    adminLink.addEventListener('click', function() {
-        adminSubmenu.style.display = adminSubmenu.style.display === 'block' ? 'none' : 'block';
-    });
+function agregarFilaTabla(proceso, radicado, ultimaActuacion, registraCambio, colorClass) {
+    const tablaCuerpo = document.getElementById('tabla-cuerpo');
+    const nuevaFila = document.createElement('tr');
+    nuevaFila.innerHTML = `
+        <td>${contadorFilas++}</td>
+        <td>${radicado}</td>
+        <td>${proceso.fechaUltimaActuacion || 'N/A'}</td>
+        <td>${proceso.despacho || 'N/A'}</td>
+        <td>${proceso.sujetosProcesales || 'N/A'}</td>
+        <td>${ultimaActuacion.anotacion || 'N/A'}</td>
+        <td class="${colorClass}">${registraCambio}</td>
+    `;
+    tablaCuerpo.appendChild(nuevaFila);
+}
 
-    // Redirigir a la página de Juzgados al hacer clic en el enlace de Juzgados
-    const juzgadosLink = document.getElementById('juzgados-link');
-    if (juzgadosLink) {
-        juzgadosLink.addEventListener('click', function() {
-            window.location.href = 'juzgados.html';
-        });
+async function ejecutarConReintentos(fn, radicado, idProceso = 'N/A', maxIntentos = 5, delayInicial = 2000) {
+    let intentos = 0;
+    let delayActual = delayInicial;
+    while (intentos < maxIntentos) {
+        try {
+            return await fn();
+        } catch (error) {
+            intentos++;
+            const status = error.response?.status || 0;
+            const erroresReintentar = [429, 500, 502, 503, 504];
+            if (intentos < maxIntentos && (erroresReintentar.includes(status) || !status)) {
+                console.warn(`🔄 Reintento ${intentos}/${maxIntentos} para radicado ${radicado} (error: ${status || 'desconocido'})`);
+                await delay(delayActual);
+                delayActual *= 2;
+            } else {
+                const mensaje = status ? `Error ${status}` : 'Error de red';
+                console.error(`❌ Fallo definitivo en radicado ${radicado}: ${mensaje}`);
+                erroresRadicados.push({ radicado, idProceso, error: mensaje });
+                return null;
+            }
+        }
     }
 }
 
-// Obtener el enlace de registro y su submenú por sus IDs
-const registroLink = document.getElementById('registro-link');
-const registroSubmenu = document.getElementById('registro-submenu');
-
-if (registroLink && registroSubmenu) {
-    // Mostrar/Ocultar el submenú de registro al hacer clic en el enlace
-    registroLink.addEventListener('click', function() {
-        registroSubmenu.style.display = registroSubmenu.style.display === 'block' ? 'none' : 'block';
-    });
+async function getProcesos() {
+    try {
+        const { data: procesos } = await axios.get('/api/procesos');
+        const radicados = procesos.map(p => p.radicado).filter(r => r !== null);
+        return radicados;
+    } catch (error) {
+        console.error('❌ Error al cargar procesos:', error);
+        return [];
+    }
 }
+
+async function getDetails(idProceso, radicado) {
+    try {
+        const { data } = await api(`/Proceso/Actuaciones/${idProceso}`);
+        if (!data?.actuaciones?.length) {
+            return { ultimaActuacion: { anotacion: 'Sin actuaciones', fechaActuacion: 'N/A' } };
+        }
+        return { ultimaActuacion: data.actuaciones[0] };
+    } catch (error) {
+        let tipoError = 'Fallo en conexión';
+        if (error.response) {
+            tipoError = error.response.status === 404 ? 'Proceso no encontrado' : `Error ${error.response.status}`;
+        }
+        erroresRadicados.push({ radicado, idProceso, error: tipoError });
+        return { ultimaActuacion: { anotacion: tipoError, fechaActuacion: 'N/A' } };
+    }
+}
+
+async function getByNameField(radicado, SoloActivos = false) {
+    await ejecutarConReintentos(async () => {
+        const { data } = await api(`/Procesos/Consulta/NumeroRadicacion`, {
+            params: { numero: radicado, SoloActivos }
+        });
+
+        const procesos = data.procesos;
+        if (!procesos?.length) {
+            erroresRadicados.push({ radicado, idProceso: 'N/A', error: 'Radicado sin procesos' });
+            return;
+        }
+
+        for (const proceso of procesos) {
+            const { idProceso, fechaUltimaActuacion, despacho, sujetosProcesales } = proceso;
+            if (!idProceso) {
+                erroresRadicados.push({ radicado, idProceso: 'N/A', error: 'ID no válido' });
+                continue;
+            }
+
+            const detalle = await ejecutarConReintentos(() => getDetails(idProceso, radicado), radicado, idProceso);
+            if (!detalle || detalle.ultimaActuacion.anotacion === 'Proceso no encontrado') continue;
+
+            const cambio = esReciente(fechaUltimaActuacion);
+            const clase = cambio ? 'registra-cambio-si' : 'registra-cambio-no';
+            agregarFilaTabla(proceso, radicado, detalle.ultimaActuacion, cambio ? 'Sí' : 'No', clase);
+        }
+    }, radicado);
+}
+
+function calcularDelay(cantidad) {
+    if (cantidad <= 10) return 1000;
+    if (cantidad <= 30) return 2000;
+    return 3000;
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+    document.getElementById("consulta-masiva-btn")?.addEventListener("click", async () => {
+        try {
+            erroresRadicados = [];
+            contadorFilas = 1;
+            const radicados = await getProcesos();
+            const delayMs = calcularDelay(radicados.length);
+            let total = 0, conCambios = 0;
+
+            for (const radicado of radicados) {
+                await getByNameField(radicado);
+                total++;
+                const filas = document.getElementById('tabla-cuerpo').getElementsByTagName("tr");
+                const ultimaFila = filas[filas.length - 1];
+                const cambio = ultimaFila?.getElementsByTagName("td")[6]?.textContent.trim();
+                if (cambio === "Sí") conCambios++;
+                await delay(delayMs);
+            }
+
+            setTimeout(() => {
+                alert(`✅ Finalizado. Consultados: ${total}, Con cambios: ${conCambios}`);
+                document.getElementById("tabla-cuerpo")?.scrollIntoView({ behavior: "smooth" });
+            }, 100);
+        } catch (error) {
+            console.error("❌ Error en consulta masiva:", error);
+            alert("❌ Ocurrió un error.");
+        }
+    });
+
+    document.getElementById("consulta-form")?.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const radicado = document.getElementById("radicado").value.trim();
+        if (!radicado) return alert("Ingrese un radicado válido.");
+        contadorFilas = 1;
+        await getByNameField(radicado);
+    });
+
+    document.getElementById('admin-link')?.addEventListener('click', () => {
+        const submenu = document.getElementById('admin-submenu');
+        submenu.style.display = submenu.style.display === 'block' ? 'none' : 'block';
+    });
+
+    document.getElementById('juzgados-link')?.addEventListener('click', () => {
+        window.location.href = 'juzgados.html';
+    });
+
+    document.getElementById('registro-link')?.addEventListener('click', () => {
+        const submenu = document.getElementById('registro-submenu');
+        submenu.style.display = submenu.style.display === 'block' ? 'none' : 'block';
+    });
+});

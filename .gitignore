@@ -1,0 +1,36 @@
+# ── Entorno — NUNCA en git ────────────────────────────────────
+.env
+.env.local
+.env.*.local
+
+# ── Compilados ────────────────────────────────────────────────
+dist/
+client/dist/
+
+# ── Dependencias ──────────────────────────────────────────────
+node_modules/
+client/node_modules/
+
+# ── Logs ──────────────────────────────────────────────────────
+logs/
+*.log
+npm-debug.log*
+
+# ── Sistema operativo ─────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── Editor ────────────────────────────────────────────────────
+.vscode/settings.json
+.idea/
+
+# ── Testing ───────────────────────────────────────────────────
+coverage/
+.nyc_output/
+
+# ── PM2 ───────────────────────────────────────────────────────
+.pm2/
+
+# ── Claude Code (workflows locales — no necesarios para despliegue) ──
+.claude/
+CLAUDE_CODE_GUIDE.md

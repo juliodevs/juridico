@@ -1,19 +1,29 @@
-import { Request, Response } from 'express';
-import connection from '../db/connection';
+import { Request, Response, NextFunction } from 'express';
+import pool from '../db/pool';
 
-// Obtener ciudades por nombre y departamento
-export const obtenerCiudades = (req: Request, res: Response) => {
-    const { query, departamentoId } = req.query;
-    const sqlQuery = query 
-        ? 'SELECT * FROM ciudades WHERE nombre LIKE ? AND departamento_id = ?' 
-        : 'SELECT * FROM ciudades WHERE departamento_id = ?';
-    const values = query ? [`%${query}%`, departamentoId] : [departamentoId];
-    
-    connection.query(sqlQuery, values, (err, results) => {
-        if (err) {
-            console.error('Error al obtener ciudades:', err);
-            return res.status(500).json({ error: 'Error al obtener ciudades' });
+// ── Obtener ciudades por nombre y/o departamento ──────────────────────────────
+export const obtenerCiudades = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+): Promise<void> => {
+    try {
+        const { query, departamentoId } = req.query;
+
+        if (query) {
+            const [rows] = await pool.query(
+                'SELECT * FROM ciudades WHERE nombre LIKE ? AND departamento_id = ?',
+                [`%${query}%`, departamentoId]
+            );
+            res.status(200).json(rows);
+        } else {
+            const [rows] = await pool.query(
+                'SELECT * FROM ciudades WHERE departamento_id = ?',
+                [departamentoId]
+            );
+            res.status(200).json(rows);
         }
-        res.status(200).json(results);
-    });
+    } catch (error) {
+        next(error);
+    }
 };

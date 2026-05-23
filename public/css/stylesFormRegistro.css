@@ -82,7 +82,8 @@ button {
 
 /* Botón de guardar */
 #guardar-cliente-btn,
-#guardar-juzgado-btn {
+#guardar-juzgado-btn,
+#guardar-proceso-btn {
     background-color: #4d4d4d; /* Gris oscuro */
 }
 

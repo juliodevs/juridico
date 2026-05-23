@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="css/style.css"> <!-- Enlace al archivo CSS -->
-    <title>Clientes</title>
+    <title>Procesos</title>
 </head>
 <body>
     <div class="container">
@@ -15,38 +15,35 @@
                     <a href="#" id="registro-link">Registro</a>
                     <ul class="submenu" id="registro-submenu">
                         <li><a href="clientes.html" id="clientes-link">Clientes</a></li>
+                        <li><a href="procesos.html" id="procesos-link">Procesos</a></li>
                     </ul>
                 </li>
             </ul>
         </nav>
 
         <div class="content" id="main-content">
-            <h1>Clientes</h1>
+            <h1>Procesos</h1>
             <div class="button-container">
                 <!-- Botón Atrás -->
                 <a href="index.html" id="atras-link">
                     <button id="atras-btn">Atrás</button>
                 </a>
-                <!-- Botón Nuevo Cliente -->
-                <a href="nuevoCliente.html" id="nuevo-cliente-link">
-                    <button id="nuevo-cliente-btn">Nuevo Cliente</button>
+                <!-- Botón Nuevo Proceso -->
+                <a href="nuevoProceso.html" id="nuevo-proceso-link">
+                    <button id="nuevo-proceso-btn">Nuevo Proceso</button>
                 </a>
             </div>
             <div class="tabla-container">
                 <table>
                     <thead>
                         <tr>
-                            <th>Número Documento</th>
-                            <th>Nombre(s)</th>
-                            <th>Apellidos</th>
-                            <th>Dirección</th>
-                            <th>Teléfono</th>
-                            <th>Ciudad</th>
-                            <th>Email</th>
+                            <th>Sujetos Procesales</th>
                             <th>Radicado</th>
+                            <th>Juzgado</th>
+                            <th>Cliente</th>                            
                         </tr>
                     </thead>
-                    <tbody id="tabla-clientes-cuerpo">
+                    <tbody id="tabla-proceso-cuerpo">
                         <!-- Aquí se insertarán las filas dinámicamente -->
                     </tbody>
                 </table>
@@ -55,6 +52,6 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    <script src="js/clientesList.js"></script> <!-- Enlace al archivo JavaScript para cargar los datos -->
+    <script src="js/procesosList.js"></script> <!-- Enlace al archivo JavaScript para cargar los datos -->
 </body>
 </html>

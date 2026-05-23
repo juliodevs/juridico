@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulario de Clientes</title>
+    <!-- Referencia al archivo de estilos -->
+    <link rel="stylesheet" href="/css/stylesConsulta.css">
+</head>
+<body>
+    <form id="clientes-form">
+        <div>
+            <label for="documento">Cédula:</label>
+            <span id="documento"></span>
+        </div>
+        <div>
+            <label for="nombre">Nombre:</label>
+            <span id="nombre"></span>
+        </div>
+        <div>
+            <label for="apellido">Apellidos:</label>
+            <span id="apellido"></span>
+        </div> 
+                
+        <div>
+            <label for="ciudad">Ciudad:</label>
+            <span id="ciudad"></span>
+        </div>
+        <div>
+            <label for="telefono">Teléfono:</label>
+            <span id="telefono"></span>
+        </div>
+        <div>
+            <label for="email">Email:</label>
+            <span id="email"></span>
+        </div>
+    </form>
+    
+    <!-- Contenedor de la tabla -->
+    <div id="tabla-container">
+        <!-- Tabla de casos -->
+        <table>
+            <thead>
+                <tr>
+                    <th>documento</th>
+                    <th>nombre</th>
+                    <th>apellido</th>
+                    <th>ciudad</th>
+                    <th>telefono</th>
+                    <th>email</th>
+                </tr>
+            </thead>
+            <tbody id="tabla-clientes-cuerpo">
+                <!-- Aquí puedes agregar filas de datos dinámicamente -->
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Botón Atrás -->
+    <div class="button-container">
+        <a href="clientes.html" id="atras-btn">Atrás</a>
+    </div>
+    
+    <!-- Referencia al archivo de JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="/js/clientesEdit.js"></script>
+</body>
+</html>

@@ -157,7 +157,7 @@ button:hover .icon {
 table {
     width: 100%;
     border-collapse: collapse; /* Remover el espacio entre las celdas */
-    margin-top: 120px; /* Aumentar el espacio superior para mover la tabla más abajo */
+    margin-top: 100px; /* Reducir el espacio superior para acercar la tabla a los botones */
     border: 1px solid #ddd; /* Borde ligero alrededor de la tabla */
 }
 
@@ -223,7 +223,8 @@ th, td {
 
 /* Estilo para el botón de nuevo */
 #nuevo-cliente-btn,
-#nuevo-juzgado-btn {
+#nuevo-juzgado-btn,
+#nuevo-proceso-btn {
     background-color: #4a4a4a; /* Gris oscuro */
     color: #f0f0f0; /* Gris muy claro para el texto */
     border: none;
@@ -246,6 +247,39 @@ th, td {
     border-radius: 4px;
     cursor: pointer;
     position: fixed; /* Fijar el botón en la parte inferior izquierda */
-    bottom: 20px; /* Espacio desde el fondo */
-   
+    bottom: 30px; /* Espacio desde el borde inferior */
+    left: 40px; /* Espacio desde el borde izquierdo */
+}
+#atras-btn:hover {
+    background-color: #6c6c6c; /* Gris más oscuro en hover */
+    color: #ffffff; /* Texto blanco en hover */
+}
+
+/* Contenedor de los botones en la parte superior de la tabla */
+.botones-superiores {
+    display: flex;
+    justify-content: flex-end; /* Alinear los botones a la derecha */
+    margin-bottom: 1px; /* Reducir el espacio entre los botones y la tabla */
+    padding-right: 15px; /* Ajustar espacio a la derecha */
+    width: 100%; /* Asegurar que ocupe todo el ancho de la tabla */
+}
+
+/* Estilos generales para los botones */
+#consulta-masiva-btn, 
+#notificar-btn {
+    background-color: #6c757d; /* Gris oscuro */
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s ease-in-out;
+    margin-left: 10px; /* Espacio entre los botones */
+}
+
+/* Cambio de color al pasar el mouse */
+#consulta-masiva-btn:hover, 
+#notificar-btn:hover {
+    background-color: #5a6268; /* Un tono más oscuro en hover */
 }

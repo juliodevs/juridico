@@ -1,27 +1,58 @@
-import { Request, Response } from 'express';
-import connection from '../db/connection';
+import { Request, Response, NextFunction } from 'express';
+import pool from '../db/pool';
 
-// Función para guardar un cliente
-export const guardarCliente = (req: Request, res: Response) => {
-    const { numero_documento, nombre, apellidos, telefono, direccion, ciudad } = req.body;
-    const query = 'INSERT INTO clientes (numero_documento, nombre, apellidos, telefono, direccion, ciudad) VALUES (?, ?, ?, ?, ?, ?)';
-    connection.query(query, [numero_documento, nombre, apellidos, telefono, direccion, ciudad], (err, results) => {
-        if (err) {
-            console.error('Error al insertar el cliente:', err);
-            return res.status(500).json({ error: 'Error al insertar el cliente' });
-        }
-        res.status(200).json({ message: 'Cliente guardado exitosamente' });
-    });
+// ── Obtener todos los clientes ────────────────────────────────────────────────
+export const obtenerClientes = async (
+    _req: Request,
+    res: Response,
+    next: NextFunction
+): Promise<void> => {
+    try {
+        const [rows] = await pool.query('SELECT * FROM clientes');
+        res.status(200).json(rows);
+    } catch (error) {
+        next(error);
+    }
 };
 
-// Función para obtener todos los clientes
-export const obtenerClientes = (req: Request, res: Response) => {
-    const query = 'SELECT * FROM clientes';
-    connection.query(query, (err, results) => {
-        if (err) {
-            console.error('Error al obtener los clientes:', err);
-            return res.status(500).json({ error: 'Error al obtener los clientes' });
+// ── Obtener un cliente por ID ─────────────────────────────────────────────────
+export const obtenerClientePorId = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+): Promise<void> => {
+    try {
+        const { id } = req.params;
+        const [rows] = await pool.query(
+            'SELECT * FROM clientes WHERE id = ?',
+            [id]
+        );
+        const clientes = rows as { id: number }[];
+
+        if (clientes.length === 0) {
+            res.status(404).json({ error: 'Cliente no encontrado' });
+            return;
         }
-        res.status(200).json(results);
-    });
+        res.status(200).json(clientes[0]);
+    } catch (error) {
+        next(error);
+    }
+};
+
+// ── Guardar un nuevo cliente ──────────────────────────────────────────────────
+export const guardarCliente = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+): Promise<void> => {
+    try {
+        const { numero_documento, nombre, apellidos, telefono, direccion, ciudad, email, radicado } = req.body;
+        await pool.query(
+            'INSERT INTO clientes (numero_documento, nombre, apellidos, telefono, direccion, ciudad, email, radicado) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+            [numero_documento, nombre, apellidos, telefono, direccion, ciudad, email, radicado]
+        );
+        res.status(201).json({ message: 'Cliente guardado exitosamente' });
+    } catch (error) {
+        next(error);
+    }
 };

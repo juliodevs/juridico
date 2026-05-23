@@ -1,7 +1,6 @@
 document.addEventListener('DOMContentLoaded', async () => {
     try {
         // Enviar solicitud GET al servidor para obtener los datos de los clientes
-        // Desestructuramos la respuesta para obtener directamente los datos de los clientes
         const { data: clientes } = await axios.get('/api/clientes');
 
         // Obtener el elemento de la tabla donde se insertarán las filas
@@ -11,11 +10,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         tablaClientesCuerpo.innerHTML = '';
 
         // Crear un fragmento de documento para mejorar el rendimiento
-        // Al usar un DocumentFragment, evitamos múltiples reflows y repaints en el DOM
         const fragment = document.createDocumentFragment();
 
         // Construir el HTML de todas las filas
-        // Iteramos sobre cada cliente y creamos una fila de tabla (tr) con sus datos
         clientes.forEach(cliente => {
             const row = document.createElement('tr');
             row.innerHTML = `
@@ -25,17 +22,27 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <td>${cliente.direccion}</td>
                 <td>${cliente.telefono}</td>
                 <td>${cliente.ciudad}</td>
+                <td>${cliente.email}</td>
+                <td>${cliente.radicado}</td>
             `;
+
+            // Agregar eventos a la fila
+            row.addEventListener('mouseover', () => {
+                row.style.cursor = 'pointer';
+            });
+
+            row.addEventListener('click', () => {
+                // Redirigir a clientesEdit.html con el ID del cliente
+                window.location.href = `clientesEdit.html?id=${cliente.id}`;
+            });
+
             // Añadimos la fila al fragmento
             fragment.appendChild(row);
         });
 
         // Insertar el fragmento en la tabla
-        // Al insertar el fragmento de una sola vez, mejoramos el rendimiento
         tablaClientesCuerpo.appendChild(fragment);
     } catch (error) {
-        // Manejo de errores
-        // En caso de error, mostramos un mensaje en la consola
         console.error('Error al cargar los datos de los clientes:', error);
     }
 });

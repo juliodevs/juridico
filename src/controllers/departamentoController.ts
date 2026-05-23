@@ -1,33 +1,44 @@
-import { Request, Response } from 'express';
-import connection from '../db/connection';
+import { Request, Response, NextFunction } from 'express';
+import pool from '../db/pool';
 
-// Obtener todos los departamentos
-export const obtenerDepartamentos = (req: Request, res: Response) => {
-    const { query } = req.query;
-    const sqlQuery = query 
-        ? 'SELECT * FROM departamentos WHERE nombre LIKE ?' 
-        : 'SELECT * FROM departamentos';
-    const values = query ? [`%${query}%`] : [];
-    
-    connection.query(sqlQuery, values, (err, results) => {
-        if (err) {
-            console.error('Error al obtener departamentos:', err);
-            return res.status(500).json({ error: 'Error al obtener departamentos' });
+// ── Obtener todos los departamentos (con búsqueda opcional) ──────────────────
+export const obtenerDepartamentos = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+): Promise<void> => {
+    try {
+        const { query } = req.query;
+
+        if (query) {
+            const [rows] = await pool.query(
+                'SELECT * FROM departamentos WHERE nombre LIKE ?',
+                [`%${query}%`]
+            );
+            res.status(200).json(rows);
+        } else {
+            const [rows] = await pool.query('SELECT * FROM departamentos');
+            res.status(200).json(rows);
         }
-        res.status(200).json(results);
-    });
+    } catch (error) {
+        next(error);
+    }
 };
 
-// Obtener todas las ciudades por departamento
-export const obtenerCiudadesPorDepartamento = (req: Request, res: Response) => {
-    const { departamentoId } = req.params;
-    
-    const query = 'SELECT * FROM ciudades WHERE departamento_id = ?';
-    connection.query(query, [departamentoId], (err, results) => {
-        if (err) {
-            console.error('Error al obtener ciudades:', err);
-            return res.status(500).json({ error: 'Error al obtener ciudades' });
-        }
-        res.status(200).json(results);
-    });
+// ── Obtener ciudades por departamento ─────────────────────────────────────────
+export const obtenerCiudadesPorDepartamento = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+): Promise<void> => {
+    try {
+        const { departamentoId } = req.params;
+        const [rows] = await pool.query(
+            'SELECT * FROM ciudades WHERE departamento_id = ?',
+            [departamentoId]
+        );
+        res.status(200).json(rows);
+    } catch (error) {
+        next(error);
+    }
 };
