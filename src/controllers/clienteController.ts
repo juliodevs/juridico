@@ -56,3 +56,59 @@ export const guardarCliente = async (
         next(error);
     }
 };
+
+// ── Actualizar un cliente ─────────────────────────────────────────────────────
+export const actualizarCliente = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+): Promise<void> => {
+    try {
+        const { id } = req.params;
+        const { numero_documento, nombre, apellidos, telefono, direccion, ciudad, email, radicado } = req.body;
+
+        const [result] = await pool.query(
+            `UPDATE clientes
+             SET numero_documento = ?, nombre = ?, apellidos = ?,
+                 telefono = ?, direccion = ?, ciudad = ?, email = ?, radicado = ?
+             WHERE id = ?`,
+            [numero_documento, nombre, apellidos, telefono, direccion ?? null, ciudad ?? null, email ?? null, radicado ?? null, id]
+        );
+
+        const updateResult = result as { affectedRows: number };
+        if (updateResult.affectedRows === 0) {
+            res.status(404).json({ error: 'Cliente no encontrado' });
+            return;
+        }
+
+        res.status(200).json({ message: 'Cliente actualizado exitosamente' });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// ── Eliminar un cliente ───────────────────────────────────────────────────────
+export const eliminarCliente = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+): Promise<void> => {
+    try {
+        const { id } = req.params;
+
+        const [result] = await pool.query(
+            'DELETE FROM clientes WHERE id = ?',
+            [id]
+        );
+
+        const deleteResult = result as { affectedRows: number };
+        if (deleteResult.affectedRows === 0) {
+            res.status(404).json({ error: 'Cliente no encontrado' });
+            return;
+        }
+
+        res.status(200).json({ message: 'Cliente eliminado exitosamente' });
+    } catch (error) {
+        next(error);
+    }
+};

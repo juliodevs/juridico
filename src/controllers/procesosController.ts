@@ -27,12 +27,70 @@ export const guardarProceso = async (
     next: NextFunction
 ): Promise<void> => {
     try {
-        const { sujetosProcesales, radicado, juzgado, idCliente } = req.body;
+        const { sujetosProcesales, radicado, juzgado, idCliente, fecha_audiencia, estado } = req.body;
         await pool.query(
-            'INSERT INTO procesos (sujetosProcesales, radicado, juzgado, idCliente) VALUES (?, ?, ?, ?)',
-            [sujetosProcesales, radicado, juzgado, idCliente]
+            `INSERT INTO procesos (sujetosProcesales, radicado, juzgado, idCliente, fecha_audiencia, estado)
+             VALUES (?, ?, ?, ?, ?, ?)`,
+            [sujetosProcesales, radicado, juzgado, idCliente, fecha_audiencia ?? null, estado ?? 'activo']
         );
         res.status(201).json({ message: 'Proceso guardado exitosamente' });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// ── Actualizar un proceso ─────────────────────────────────────────────────────
+export const actualizarProceso = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+): Promise<void> => {
+    try {
+        const { id } = req.params;
+        const { sujetosProcesales, radicado, juzgado, idCliente, fecha_audiencia, estado } = req.body;
+
+        const [result] = await pool.query(
+            `UPDATE procesos
+             SET sujetosProcesales = ?, radicado = ?, juzgado = ?,
+                 idCliente = ?, fecha_audiencia = ?, estado = ?,
+                 notificado = FALSE
+             WHERE idproceso = ?`,
+            [sujetosProcesales, radicado, juzgado, idCliente, fecha_audiencia ?? null, estado ?? 'activo', id]
+        );
+
+        const updateResult = result as { affectedRows: number };
+        if (updateResult.affectedRows === 0) {
+            res.status(404).json({ error: 'Proceso no encontrado' });
+            return;
+        }
+
+        res.status(200).json({ message: 'Proceso actualizado exitosamente' });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// ── Eliminar un proceso ───────────────────────────────────────────────────────
+export const eliminarProceso = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+): Promise<void> => {
+    try {
+        const { id } = req.params;
+
+        const [result] = await pool.query(
+            'DELETE FROM procesos WHERE idproceso = ?',
+            [id]
+        );
+
+        const deleteResult = result as { affectedRows: number };
+        if (deleteResult.affectedRows === 0) {
+            res.status(404).json({ error: 'Proceso no encontrado' });
+            return;
+        }
+
+        res.status(200).json({ message: 'Proceso eliminado exitosamente' });
     } catch (error) {
         next(error);
     }

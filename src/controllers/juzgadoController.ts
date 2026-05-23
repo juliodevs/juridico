@@ -65,3 +65,60 @@ export const guardarJuzgado = async (
         next(error);
     }
 };
+
+// ── Actualizar un juzgado ─────────────────────────────────────────────────────
+export const actualizarJuzgado = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+): Promise<void> => {
+    try {
+        const { id } = req.params;
+        const { juzgado, juez, email, direccion, telefono, departamento, ciudad } = req.body;
+
+        const [result] = await pool.query(
+            `UPDATE juzgados
+             SET juzgado = ?, juez = ?, email = ?,
+                 direccion = ?, telefono = ?,
+                 departamento_id = ?, ciudad_id = ?
+             WHERE id = ?`,
+            [juzgado, juez, email ?? null, direccion ?? null, telefono ?? null, departamento, ciudad, id]
+        );
+
+        const updateResult = result as { affectedRows: number };
+        if (updateResult.affectedRows === 0) {
+            res.status(404).json({ error: 'Juzgado no encontrado' });
+            return;
+        }
+
+        res.status(200).json({ message: 'Juzgado actualizado exitosamente' });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// ── Eliminar un juzgado ───────────────────────────────────────────────────────
+export const eliminarJuzgado = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+): Promise<void> => {
+    try {
+        const { id } = req.params;
+
+        const [result] = await pool.query(
+            'DELETE FROM juzgados WHERE id = ?',
+            [id]
+        );
+
+        const deleteResult = result as { affectedRows: number };
+        if (deleteResult.affectedRows === 0) {
+            res.status(404).json({ error: 'Juzgado no encontrado' });
+            return;
+        }
+
+        res.status(200).json({ message: 'Juzgado eliminado exitosamente' });
+    } catch (error) {
+        next(error);
+    }
+};
