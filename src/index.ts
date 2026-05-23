@@ -13,11 +13,20 @@ import path from 'path';
 import { testConnection } from './db/pool';
 import { errorHandler } from './middleware/errorHandler';
 
-import clienteRoutes from './routes/clienteRoutes';
-import procesosRoutes from './routes/procesosRoutes';
-import departamentoRoutes from './routes/departamentoRoutes';
-import ciudadRoutes from './routes/ciudadRoutes';
-import juzgadoRoutes from './routes/juzgadoRoutes';
+// ── Rutas legadas /api (compatibilidad con el frontend estático actual) ────────
+import clienteRoutesLegacy from './routes/clienteRoutes';
+import procesosRoutesLegacy from './routes/procesosRoutes';
+import departamentoRoutesLegacy from './routes/departamentoRoutes';
+import ciudadRoutesLegacy from './routes/ciudadRoutes';
+import juzgadoRoutesLegacy from './routes/juzgadoRoutes';
+
+// ── Rutas v1 /api/v1 (con autenticación JWT) ──────────────────────────────────
+import authRoutes from './routes/v1/authRoutes';
+import clienteRoutesV1 from './routes/v1/clienteRoutes';
+import procesosRoutesV1 from './routes/v1/procesosRoutes';
+import juzgadoRoutesV1 from './routes/v1/juzgadoRoutes';
+import departamentoRoutesV1 from './routes/v1/departamentoRoutes';
+import ciudadRoutesV1 from './routes/v1/ciudadRoutes';
 
 const app = express();
 
@@ -63,12 +72,21 @@ app.use(express.urlencoded({ extended: true }));
 // ── Archivos estáticos ────────────────────────────────────────────────────────
 app.use(express.static(path.join(__dirname, '../public')));
 
-// ── Rutas de la API ───────────────────────────────────────────────────────────
-app.use('/api', clienteRoutes);
-app.use('/api', departamentoRoutes);
-app.use('/api', ciudadRoutes);
-app.use('/api', juzgadoRoutes);
-app.use('/api', procesosRoutes);
+// ── API v1 (con autenticación JWT) ────────────────────────────────────────────
+app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1', clienteRoutesV1);
+app.use('/api/v1', procesosRoutesV1);
+app.use('/api/v1', juzgadoRoutesV1);
+app.use('/api/v1', departamentoRoutesV1);
+app.use('/api/v1', ciudadRoutesV1);
+
+// ── API legada /api (sin autenticación — compatibilidad con frontend estático) ─
+// Se eliminará en Sesión 6 cuando el frontend Vue reemplace las páginas HTML.
+app.use('/api', clienteRoutesLegacy);
+app.use('/api', departamentoRoutesLegacy);
+app.use('/api', ciudadRoutesLegacy);
+app.use('/api', juzgadoRoutesLegacy);
+app.use('/api', procesosRoutesLegacy);
 
 // ── Ruta para servir el archivo HTML principal ────────────────────────────────
 app.get('/', (_req, res) => {
