@@ -28,6 +28,7 @@ import juzgadoRoutesV1 from './routes/v1/juzgadoRoutes';
 import departamentoRoutesV1 from './routes/v1/departamentoRoutes';
 import ciudadRoutesV1 from './routes/v1/ciudadRoutes';
 import adminRoutes from './routes/v1/adminRoutes';
+import dashboardRoutes from './routes/v1/dashboardRoutes';
 import { iniciarAlertasAudiencias } from './jobs/alertasAudiencias';
 
 const app = express();
@@ -77,6 +78,7 @@ app.use(express.static(path.join(__dirname, '../public')));
 // ── API v1 (con autenticación JWT) ────────────────────────────────────────────
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/admin', adminRoutes);
+app.use('/api/v1', dashboardRoutes);
 app.use('/api/v1', clienteRoutesV1);
 app.use('/api/v1', procesosRoutesV1);
 app.use('/api/v1', juzgadoRoutesV1);
