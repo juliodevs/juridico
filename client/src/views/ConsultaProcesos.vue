@@ -47,16 +47,22 @@ interface ErrorItem {
 
 // ── Constantes ─────────────────────────────────────────────────────────────────
 /**
- * Radicados que se consultan simultáneamente en cada lote.
- * 2 es el valor óptimo para la API de la Rama Judicial:
- *   - Más de 3 simultáneos dispara rate-limit (429) agresivamente
- *   - Con 2 concurrentes + 3 s de pausa la tasa de éxito es muy alta
+ * Pausa entre radicados consecutivos (ms).
+ * Procesamos 1 radicado a la vez (secuencial) para no saturar la Rama Judicial.
+ * 1 500 ms de pausa + ~2-3 s de procesamiento = ~4 s por radicado promedio.
  */
-const LOTE = 2
-/** Pausa entre lotes (ms). 3 000 ms respeta el throttle de la Rama Judicial. */
-const PAUSA_ENTRE_LOTES = 3000
+const PAUSA_ENTRE_RADICADOS = 1500
+/** Pausa entre /proceso y /actuaciones dentro del mismo radicado (ms). */
+const PAUSA_ENTRE_SUBREQUESTS = 600
+/**
+ * Backoff mínimo cuando la Rama Judicial devuelve 403 (su rate-limit no estándar).
+ * 5 000 ms da tiempo al servidor para "resetear" la ventana de throttle.
+ */
+const PAUSA_POR_403 = 5000
 
 // ── Estado ─────────────────────────────────────────────────────────────────────
+/** Marca de tiempo de inicio de la consulta masiva (para estimar tiempo restante) */
+const tiempoInicio = ref(0)
 const filas           = ref<FilaResultado[]>([])
 const erroresConsulta = ref<ErrorItem[]>([])
 const consultando     = ref(false)
@@ -106,11 +112,15 @@ async function ejecutarConReintentos<T>(
             intentos++
             const axiosErr = err as { response?: { status?: number } }
             const status   = axiosErr.response?.status ?? 0
-            const erroresReintentar = [429, 500, 502, 503, 504]
+            // 403 = rate-limit de la Rama Judicial (usan 403 en vez del estándar 429)
+            const erroresReintentar = [403, 429, 500, 502, 503, 504]
 
             if (intentos < maxIntentos && (erroresReintentar.includes(status) || !status)) {
-                console.warn(`🔄 Reintento ${intentos}/${maxIntentos} — ${radicado} (HTTP ${status || 'red'})`)
-                await delay(delayActual)
+                // Para 403 aplicamos un mínimo más largo: la RJ necesita varios segundos
+                // para "liberar" la IP del throttle; 5 s es suficiente en la práctica.
+                const pausaEfectiva = status === 403 ? Math.max(delayActual, PAUSA_POR_403) : delayActual
+                console.warn(`🔄 Reintento ${intentos}/${maxIntentos} — ${radicado} (HTTP ${status || 'red'}) → espera ${pausaEfectiva}ms`)
+                await delay(pausaEfectiva)
                 delayActual *= 2
             } else {
                 const mensaje = status ? `Error ${status}` : 'Error de red'
@@ -177,6 +187,10 @@ async function consultarRadicado(radicado: string): Promise<void> {
         const { idProceso } = proceso
         if (!idProceso) continue
 
+        // Pequeña pausa entre /proceso y /actuaciones del mismo radicado
+        // para no disparar dos requests al servidor en el mismo instante.
+        await delay(PAUSA_ENTRE_SUBREQUESTS)
+
         const actuacion = await ejecutarConReintentos<RJActuacion>(
             () => obtenerActuaciones(idProceso),
             radicado,
@@ -231,29 +245,36 @@ async function consultaMasiva(): Promise<void> {
             return
         }
 
-        const lotesTotal = Math.ceil(radicados.length / LOTE)
-        progreso.value.total     = radicados.length
-        progreso.value.lotesTotal = lotesTotal
+        progreso.value.total      = radicados.length
+        progreso.value.lotesTotal = radicados.length
+        tiempoInicio.value        = Date.now()
 
-        // Procesar en lotes: cada lote corre en paralelo con Promise.allSettled
-        for (let i = 0; i < radicados.length; i += LOTE) {
-            const lote     = radicados.slice(i, i + LOTE)
-            const loteNum  = Math.floor(i / LOTE) + 1
+        // ── Modo secuencial: 1 radicado a la vez ────────────────────────────
+        // Procesar en paralelo dispara 403 masivos de la Rama Judicial.
+        // Secuencial es más lento (~4 s/radicado) pero prácticamente elimina los errores.
+        for (let i = 0; i < radicados.length; i++) {
+            const radicado = radicados[i]
 
-            progreso.value.loteActual = loteNum
-            loteEnCurso.value         = lote
-            mensajeProgreso.value     =
-                `Lote ${loteNum} / ${lotesTotal} — consultando ${lote.length} radicados en paralelo`
+            progreso.value.loteActual = i + 1
+            loteEnCurso.value         = [radicado]
 
-            // ✅ Todos los radicados del lote se consultan AL MISMO TIEMPO
-            await Promise.allSettled(lote.map(r => consultarRadicado(r)))
+            // Tiempo estimado restante con promedio móvil de los radicados anteriores
+            const transcurrido = (Date.now() - tiempoInicio.value) / 1000
+            const avgSeg       = i > 0 ? transcurrido / i : 4
+            const etaSeg       = Math.round(avgSeg * (radicados.length - i))
+            const etaTexto     = etaSeg >= 60
+                ? `~${Math.ceil(etaSeg / 60)} min restantes`
+                : `~${etaSeg}s restantes`
 
-            progreso.value.actual = Math.min(i + LOTE, radicados.length)
+            mensajeProgreso.value =
+                `${i + 1} / ${radicados.length} — consultando ${radicado.length > 18 ? radicado.slice(0, 12) + '…' : radicado} (${etaTexto})`
 
-            // Pausa breve entre lotes para respetar el rate-limit de la Rama Judicial
-            if (i + LOTE < radicados.length) {
-                mensajeProgreso.value = `Lote ${loteNum}/${lotesTotal} listo. Preparando siguiente lote…`
-                await delay(PAUSA_ENTRE_LOTES)
+            await consultarRadicado(radicado)
+            progreso.value.actual = i + 1
+
+            // Pausa entre radicados (no hace falta después del último)
+            if (i < radicados.length - 1) {
+                await delay(PAUSA_ENTRE_RADICADOS)
             }
         }
 
@@ -499,13 +520,13 @@ const mostrarTablaErrores = computed(() =>
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                         </svg>
-                        <span v-if="consultando && progreso.lotesTotal > 0">
-                            Lote {{ progreso.loteActual }}/{{ progreso.lotesTotal }}
+                        <span v-if="consultando && progreso.total > 0">
+                            {{ progreso.actual }}/{{ progreso.total }}
                         </span>
                         <span v-else-if="consultando">Iniciando…</span>
                         <span v-else>Consultar todos</span>
                     </button>
-                    <p class="text-xs text-gray-400 mt-1">{{ LOTE }} radicados simultáneos por lote</p>
+                    <p class="text-xs text-gray-400 mt-1">Secuencial · 1 radicado a la vez</p>
                 </div>
 
                 <!-- Botón limpiar -->
