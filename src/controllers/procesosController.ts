@@ -3,17 +3,35 @@ import pool from '../db/pool';
 import { notificar } from '../services/notificationService';
 
 // ── Obtener todos los procesos ────────────────────────────────────────────────
+/**
+ * GET /api/v1/procesos[?soloActivos=1]
+ *
+ * Sin parámetro: devuelve todos los procesos (para la vista de gestión).
+ * Con ?soloActivos=1 (o =true): devuelve solo los que tienen estado = 'activo'
+ * (usado por la consulta masiva de Rama Judicial para evitar consultar procesos cerrados).
+ */
 export const obtenerProcesos = async (
-    _req: Request,
+    req: Request,
     res: Response,
     next: NextFunction
 ): Promise<void> => {
     try {
+        const filtrarActivos =
+            req.query['soloActivos'] === '1' || req.query['soloActivos'] === 'true';
+
+        // El WHERE se construye con un literal hardcodeado, no con datos del usuario → sin riesgo de inyección.
+        const whereClause = filtrarActivos ? "WHERE p.estado = 'activo'" : '';
+
         const [rows] = await pool.query(`
             SELECT p.idproceso, p.sujetosProcesales, p.radicado, p.juzgado,
+                   p.idCliente, p.fecha_audiencia, p.estado, p.notificado,
+                   p.updated_at,
+                   TIMESTAMPDIFF(DAY, COALESCE(p.updated_at, NOW()), NOW()) AS dias_sin_actualizar,
                    CONCAT(c.nombre, ' ', c.apellidos) AS nombreCompletoCliente
             FROM procesos p
             LEFT JOIN clientes c ON p.idCliente = c.id
+            ${whereClause}
+            ORDER BY p.idproceso DESC
         `);
         res.status(200).json(rows);
     } catch (error) {
@@ -146,6 +164,32 @@ export const actualizarProceso = async (
             whatsappLink,
             ...(advertenciasNotificacion.length > 0 && { advertencias: advertenciasNotificacion }),
         });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// ── Registrar revisión manual de un proceso ───────────────────────────────────
+export const revisarProceso = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+): Promise<void> => {
+    try {
+        const { id } = req.params;
+
+        const [result] = await pool.query(
+            'UPDATE procesos SET updated_at = NOW(), notificado = FALSE WHERE idproceso = ?',
+            [id]
+        );
+
+        const updateResult = result as { affectedRows: number };
+        if (updateResult.affectedRows === 0) {
+            res.status(404).json({ error: 'Proceso no encontrado' });
+            return;
+        }
+
+        res.status(200).json({ message: 'Revisión registrada exitosamente' });
     } catch (error) {
         next(error);
     }

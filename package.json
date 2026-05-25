@@ -5,9 +5,14 @@
   "main": "index.js",
   "scripts": {
     "build": "tsc",
+    "build:all": "tsc && cd client && npm run build && cd ..",
     "start": "node dist/index.js",
+    "start:prod": "cross-env NODE_ENV=production node dist/index.js",
     "dev": "nodemon src/index.ts",
-    "seed:admin": "ts-node scripts/seed-admin.ts"
+    "seed:admin": "ts-node scripts/seed-admin.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "keywords": [],
   "author": "",
@@ -35,8 +40,13 @@
     "@types/node": "^22.4.1",
     "@types/node-cron": "^3.0.11",
     "@types/nodemailer": "^8.0.0",
+    "@types/supertest": "^7.2.0",
+    "@vitest/coverage-v8": "^4.1.7",
+    "cross-env": "^10.1.0",
     "nodemon": "^3.1.4",
+    "supertest": "^7.2.2",
     "ts-node": "^10.9.2",
-    "typescript": "^5.5.4"
+    "typescript": "^5.5.4",
+    "vitest": "^4.1.7"
   }
 }

@@ -7,6 +7,7 @@ import {
     guardarProceso,
     actualizarProceso,
     eliminarProceso,
+    revisarProceso,
 } from '../../controllers/procesosController';
 
 const router = express.Router();
@@ -45,6 +46,7 @@ const idParamRule = [
 // ── Rutas ─────────────────────────────────────────────────────────────────────
 router.get('/procesos', obtenerProcesos);
 router.post('/procesos', validate(procesoBodyRules), guardarProceso);
+router.patch('/procesos/:id/revisar', validate(idParamRule), revisarProceso);
 router.put('/procesos/:id', validate([...idParamRule, ...procesoBodyRules]), actualizarProceso);
 router.delete('/procesos/:id', validate(idParamRule), eliminarProceso);
 

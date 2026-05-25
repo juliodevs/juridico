@@ -43,6 +43,11 @@ const router = createRouter({
                     component: () => import('../views/Juzgados.vue'),
                 },
                 {
+                    path: 'consulta-procesos',
+                    name: 'ConsultaProcesos',
+                    component: () => import('../views/ConsultaProcesos.vue'),
+                },
+                {
                     path: 'admin/configuracion',
                     name: 'AdminConfiguracion',
                     component: () => import('../views/admin/Configuracion.vue'),

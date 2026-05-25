@@ -1,9 +1,13 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import axios from 'axios'
-import { useAuthStore } from '../stores/authStore'
+import { useRouter } from 'vue-router'
+import api from '../services/api'
+import { useAuthStore }    from '../stores/authStore'
+import { useConsultaStore } from '../stores/consultaStore'
 
-const authStore = useAuthStore()
+const authStore    = useAuthStore()
+const consultaStore = useConsultaStore()
+const router       = useRouter()
 
 // ── Tipos ──────────────────────────────────────────────────────────────────────
 
@@ -26,9 +30,7 @@ async function cargarStats(): Promise<void> {
     loading.value = true
     error.value   = ''
     try {
-        const response = await axios.get<DashboardStats>('/api/v1/dashboard/stats', {
-            headers: { Authorization: `Bearer ${authStore.token}` },
-        })
+        const response = await api.get<DashboardStats>('/dashboard/stats')
         stats.value = response.data
     } catch (err: unknown) {
         error.value = 'No se pudieron cargar las estadísticas. Verifica la conexión al servidor.'
@@ -38,7 +40,10 @@ async function cargarStats(): Promise<void> {
     }
 }
 
-onMounted(cargarStats)
+onMounted(() => {
+    cargarStats()
+    consultaStore.cargarDesdeStorage()   // Recuperar última consulta Rama Judicial
+})
 
 // ── Definición de tarjetas KPI ────────────────────────────────────────────────
 
@@ -158,6 +163,122 @@ const kpiCards: KpiCard[] = [
                     </div>
                 </div>
             </div>
+        </div>
+
+        <!-- KPI: Consulta Rama Judicial (solo si ya se ejecutó alguna vez) -->
+        <div
+            v-if="consultaStore.ultimaConsulta"
+            class="mt-5 bg-white rounded-xl border border-gray-200 p-5"
+        >
+            <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
+                <div>
+                    <h2 class="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                        <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+                        </svg>
+                        Última consulta — Rama Judicial
+                    </h2>
+                    <p class="text-xs text-gray-400 mt-0.5 ml-6">
+                        {{ new Date(consultaStore.ultimaConsulta.fecha).toLocaleString('es-CO') }}
+                        · umbral {{ consultaStore.ultimaConsulta.dias }} días
+                    </p>
+                </div>
+                <button
+                    @click="router.push('/consulta-procesos')"
+                    class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-indigo-600 border border-indigo-200 rounded-lg hover:bg-indigo-50 transition"
+                >
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                    Nueva consulta
+                </button>
+            </div>
+
+            <!-- Métricas de la consulta -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+
+                <!-- Con cambios (destacado) -->
+                <button
+                    @click="router.push('/consulta-procesos')"
+                    class="col-span-2 sm:col-span-1 flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all"
+                    :class="consultaStore.ultimaConsulta.conCambios > 0
+                        ? 'border-green-300 bg-green-50 hover:bg-green-100 cursor-pointer'
+                        : 'border-gray-200 bg-gray-50 cursor-default'"
+                >
+                    <span
+                        class="text-3xl font-bold"
+                        :class="consultaStore.ultimaConsulta.conCambios > 0 ? 'text-green-600' : 'text-gray-400'"
+                    >
+                        {{ consultaStore.ultimaConsulta.conCambios }}
+                    </span>
+                    <span
+                        class="text-xs font-semibold mt-1"
+                        :class="consultaStore.ultimaConsulta.conCambios > 0 ? 'text-green-500' : 'text-gray-400'"
+                    >
+                        Con cambios
+                    </span>
+                    <span
+                        v-if="consultaStore.ultimaConsulta.conCambios > 0"
+                        class="text-xs text-green-400 mt-0.5"
+                    >
+                        Ver detalle →
+                    </span>
+                </button>
+
+                <!-- Total consultados -->
+                <div class="flex flex-col items-center justify-center p-4 rounded-xl border border-gray-200 bg-gray-50">
+                    <span class="text-3xl font-bold text-gray-600">{{ consultaStore.ultimaConsulta.total }}</span>
+                    <span class="text-xs text-gray-400 font-medium mt-1">Consultados</span>
+                </div>
+
+                <!-- Sin cambios -->
+                <div class="flex flex-col items-center justify-center p-4 rounded-xl border border-gray-200 bg-gray-50">
+                    <span class="text-3xl font-bold text-gray-400">{{ consultaStore.ultimaConsulta.sinCambios }}</span>
+                    <span class="text-xs text-gray-400 font-medium mt-1">Sin cambios</span>
+                </div>
+
+                <!-- Con error -->
+                <div
+                    class="flex flex-col items-center justify-center p-4 rounded-xl border"
+                    :class="consultaStore.ultimaConsulta.conError > 0 ? 'border-red-200 bg-red-50' : 'border-gray-200 bg-gray-50'"
+                >
+                    <span
+                        class="text-3xl font-bold"
+                        :class="consultaStore.ultimaConsulta.conError > 0 ? 'text-red-500' : 'text-gray-300'"
+                    >
+                        {{ consultaStore.ultimaConsulta.conError }}
+                    </span>
+                    <span
+                        class="text-xs font-medium mt-1"
+                        :class="consultaStore.ultimaConsulta.conError > 0 ? 'text-red-400' : 'text-gray-300'"
+                    >
+                        Con error
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Aviso si nunca se ha ejecutado consulta -->
+        <div
+            v-else-if="stats && !loading"
+            class="mt-5 bg-white rounded-xl border border-dashed border-gray-300 p-5 flex items-center gap-4 text-gray-400"
+        >
+            <svg class="w-8 h-8 flex-shrink-0 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+            </svg>
+            <div class="flex-1 min-w-0">
+                <p class="text-sm font-medium text-gray-500">Sin consulta a la Rama Judicial</p>
+                <p class="text-xs mt-0.5">Ejecuta una consulta para ver el estado de tus radicados aquí.</p>
+            </div>
+            <button
+                @click="router.push('/consulta-procesos')"
+                class="flex-shrink-0 px-3 py-1.5 text-xs font-medium text-indigo-600 border border-indigo-200 rounded-lg hover:bg-indigo-50 transition"
+            >
+                Ir a consultar
+            </button>
         </div>
 
         <!-- Panel de bienvenida (visible siempre que haya datos) -->
