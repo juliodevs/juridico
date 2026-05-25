@@ -69,9 +69,11 @@ export const consultarProceso = async (
             return;
         }
 
-        // Interpretamos el query param: cualquier valor distinto de 'false' se trata como true.
-        // Esto garantiza que el default sea siempre "solo activos" cuando el cliente no envía el parámetro.
-        const soloActivos = SoloActivos !== 'false';
+        // Default false: el filtro de actividad lo aplica nuestra BD (estado='activo').
+        // Forzar SoloActivos=true en la RJ ocultaría procesos que ellos consideran
+        // terminados pero que el despacho aún gestiona activamente.
+        // Solo se activa si el cliente envía explícitamente SoloActivos=true.
+        const soloActivos = SoloActivos === 'true';
 
         const { data } = await rjApi.get('/Procesos/Consulta/NumeroRadicacion', {
             params: {

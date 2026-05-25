@@ -46,10 +46,15 @@ interface ErrorItem {
 // para evitar el bloqueo CORS del navegador.
 
 // ── Constantes ─────────────────────────────────────────────────────────────────
-/** Radicados que se consultan simultáneamente en cada lote */
-const LOTE = 5
-/** Pausa entre lotes (ms) para no saturar la API de la Rama Judicial */
-const PAUSA_ENTRE_LOTES = 1500
+/**
+ * Radicados que se consultan simultáneamente en cada lote.
+ * 2 es el valor óptimo para la API de la Rama Judicial:
+ *   - Más de 3 simultáneos dispara rate-limit (429) agresivamente
+ *   - Con 2 concurrentes + 3 s de pausa la tasa de éxito es muy alta
+ */
+const LOTE = 2
+/** Pausa entre lotes (ms). 3 000 ms respeta el throttle de la Rama Judicial. */
+const PAUSA_ENTRE_LOTES = 3000
 
 // ── Estado ─────────────────────────────────────────────────────────────────────
 const filas           = ref<FilaResultado[]>([])
@@ -119,70 +124,82 @@ async function ejecutarConReintentos<T>(
 
 // ── Llamadas a la Rama Judicial ───────────────────────────────────────────────
 
-async function obtenerActuaciones(idProceso: number, radicado: string): Promise<RJActuacion> {
-    try {
-        // Llamamos a nuestro proxy backend — evita el bloqueo CORS del navegador
-        const { data } = await api.get<{ actuaciones?: RJActuacion[] }>(
-            `/rama-judicial/actuaciones/${idProceso}`
-        )
-        if (!data?.actuaciones?.length) {
-            return { anotacion: 'Sin actuaciones', fechaActuacion: null }
-        }
-        return data.actuaciones[0]
-    } catch (err: unknown) {
-        const axiosErr = err as { response?: { status?: number } }
-        const status   = axiosErr.response?.status ?? 0
-        const tipoError = status === 404 ? 'Proceso no encontrado'
-            : status              ? `Error ${status}`
-            : 'Fallo en conexión'
-        erroresConsulta.value.push({ radicado, idProceso: String(idProceso), error: tipoError })
-        return { anotacion: tipoError, fechaActuacion: null }
-    }
+/**
+ * Obtiene la primera actuación de un proceso.
+ *
+ * NO captura errores: si la petición falla, lanza la excepción para que
+ * el llamador (ejecutarConReintentos) decida si reintenta o reporta el error.
+ * Esto garantiza que solo aparecen en erroresConsulta los fallos definitivos
+ * (tras agotar todos los reintentos), no los transitorios.
+ */
+async function obtenerActuaciones(idProceso: number): Promise<RJActuacion> {
+    const { data } = await api.get<{ actuaciones?: RJActuacion[] }>(
+        `/rama-judicial/actuaciones/${idProceso}`
+    )
+    return data?.actuaciones?.[0] ?? { anotacion: 'Sin actuaciones', fechaActuacion: null }
 }
 
-async function consultarRadicado(radicado: string, soloActivos = false): Promise<void> {
-    await ejecutarConReintentos(async () => {
-        // Llamamos a nuestro proxy backend — evita el bloqueo CORS del navegador
+/**
+ * Consulta un radicado en dos pasos con reintentos independientes:
+ *
+ *   Paso 1 — GET /rama-judicial/proceso?radicado=...
+ *     Si la RJ no encuentra el radicado devuelve [] → silencioso (no es un error nuestro).
+ *     Si hay fallo de red/rate-limit → reintenta hasta 5 veces con backoff.
+ *
+ *   Paso 2 — GET /rama-judicial/actuaciones/:id  (por cada proceso encontrado)
+ *     Mismo mecanismo de reintentos, independiente del paso 1.
+ *     Solo llega a erroresConsulta si agota todos los reintentos.
+ *
+ * SoloActivos NO se envía a la RJ: nuestro filtro interno (estado='activo')
+ * ya garantiza que solo consultamos procesos que gestionamos activamente.
+ * Forzar SoloActivos=true en la RJ genera falsos "sin procesos" para casos
+ * que ellos consideran terminados pero que nosotros aún seguimos.
+ */
+async function consultarRadicado(radicado: string): Promise<void> {
+
+    // ── Paso 1: obtener lista de procesos ────────────────────────────────────
+    const procesos = await ejecutarConReintentos<RJProceso[]>(async () => {
         const { data } = await api.get<{ procesos?: RJProceso[] }>(
             '/rama-judicial/proceso',
-            { params: { radicado, SoloActivos: soloActivos } }
+            { params: { radicado } }   // sin SoloActivos → controller usa false por defecto
+        )
+        return data.procesos ?? []
+    }, radicado)
+
+    // null = ejecutarConReintentos agotó todos los reintentos y ya registró el error
+    if (procesos === null) return
+
+    // Array vacío = RJ no encontró ese radicado → no es error, simplemente no está
+    if (!procesos.length) return
+
+    // ── Paso 2: para cada proceso, obtener su última actuación ───────────────
+    for (const proceso of procesos) {
+        const { idProceso } = proceso
+        if (!idProceso) continue
+
+        const actuacion = await ejecutarConReintentos<RJActuacion>(
+            () => obtenerActuaciones(idProceso),
+            radicado,
+            String(idProceso)
         )
 
-        const procesos = data.procesos
-        if (!procesos?.length) {
-            erroresConsulta.value.push({ radicado, idProceso: 'N/A', error: 'Radicado sin procesos' })
-            return
-        }
+        // null = agotó reintentos, error ya registrado → omitir esta fila
+        if (actuacion === null) continue
 
-        for (const proceso of procesos) {
-            const { idProceso } = proceso
-            if (!idProceso) {
-                erroresConsulta.value.push({ radicado, idProceso: 'N/A', error: 'ID de proceso no válido' })
-                continue
-            }
+        const cambio = esReciente(proceso.fechaUltimaActuacion, diasReciente.value)
+        if (cambio) progreso.value.conCambios++
 
-            const actuacion = await ejecutarConReintentos(
-                () => obtenerActuaciones(idProceso, radicado),
-                radicado, String(idProceso)
-            )
-            if (!actuacion) continue
-            if (actuacion.anotacion === 'Proceso no encontrado') continue
-
-            const cambio = esReciente(proceso.fechaUltimaActuacion, diasReciente.value)
-            if (cambio) progreso.value.conCambios++
-
-            filas.value.push({
-                numero:               contadorFilas.value++,
-                radicado,
-                idProceso,
-                fechaUltimaActuacion: proceso.fechaUltimaActuacion ?? 'N/A',
-                despacho:             proceso.despacho              ?? 'N/A',
-                sujetosProcesales:    proceso.sujetosProcesales      ?? 'N/A',
-                ultimaAnotacion:      actuacion.anotacion             ?? 'N/A',
-                registraCambio:       cambio,
-            })
-        }
-    }, radicado)
+        filas.value.push({
+            numero:               contadorFilas.value++,
+            radicado,
+            idProceso,
+            fechaUltimaActuacion: proceso.fechaUltimaActuacion ?? 'N/A',
+            despacho:             proceso.despacho              ?? 'N/A',
+            sujetosProcesales:    proceso.sujetosProcesales      ?? 'N/A',
+            ultimaAnotacion:      actuacion.anotacion             ?? 'Sin actuaciones',
+            registraCambio:       cambio,
+        })
+    }
 }
 
 // ── Acciones ──────────────────────────────────────────────────────────────────
@@ -229,8 +246,7 @@ async function consultaMasiva(): Promise<void> {
                 `Lote ${loteNum} / ${lotesTotal} — consultando ${lote.length} radicados en paralelo`
 
             // ✅ Todos los radicados del lote se consultan AL MISMO TIEMPO
-            // soloActivos=true → la Rama Judicial devuelve solo procesos activos en su sistema
-            await Promise.allSettled(lote.map(r => consultarRadicado(r, true)))
+            await Promise.allSettled(lote.map(r => consultarRadicado(r)))
 
             progreso.value.actual = Math.min(i + LOTE, radicados.length)
 
@@ -278,8 +294,7 @@ async function consultaIndividual(): Promise<void> {
     mensajeProgreso.value   = `Consultando ${radicado} en la Rama Judicial…`
 
     try {
-        // soloActivos=true → solo procesos activos en la Rama Judicial
-        await consultarRadicado(radicado, true)
+        await consultarRadicado(radicado)
         progreso.value.actual = 1
 
         // Persistir resultado individual en el store
