@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue'
 import api from '../services/api'
 import { useConsultaStore } from '../stores/consultaStore'
+import TextoExpandible from '../components/TextoExpandible.vue'
 
 const consultaStore = useConsultaStore()
 
@@ -722,10 +723,18 @@ const mostrarTablaErrores = computed(() =>
                     </button>
                 </div>
                 <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-green-100 text-sm">
+                    <table class="w-full table-fixed divide-y divide-green-100 text-sm">
+                        <colgroup>
+                            <col class="w-8" />
+                            <col class="w-40" />
+                            <col class="w-28" />
+                            <col />
+                            <col class="hidden lg:table-column" />
+                            <col />
+                        </colgroup>
                         <thead class="bg-green-50">
                             <tr>
-                                <th class="px-3 py-3 text-left text-xs font-semibold text-green-600 uppercase tracking-wider w-10">#</th>
+                                <th class="px-3 py-3 text-left text-xs font-semibold text-green-600 uppercase tracking-wider">#</th>
                                 <th class="px-3 py-3 text-left text-xs font-semibold text-green-600 uppercase tracking-wider">Radicado</th>
                                 <th class="px-3 py-3 text-left text-xs font-semibold text-green-600 uppercase tracking-wider hidden md:table-cell">Últ. Actuación</th>
                                 <th class="px-3 py-3 text-left text-xs font-semibold text-green-600 uppercase tracking-wider hidden lg:table-cell">Despacho</th>
@@ -741,19 +750,19 @@ const mostrarTablaErrores = computed(() =>
                             >
                                 <td class="px-3 py-3 text-green-400 font-mono text-xs">{{ idx + 1 }}</td>
                                 <td class="px-3 py-3">
-                                    <span class="font-mono text-xs font-semibold text-gray-900">{{ fila.radicado }}</span>
+                                    <span class="font-mono text-xs font-semibold text-gray-900 break-all">{{ fila.radicado }}</span>
                                 </td>
                                 <td class="px-3 py-3 hidden md:table-cell whitespace-nowrap">
                                     <span class="text-green-700 font-semibold">{{ fila.fechaUltimaActuacion }}</span>
                                 </td>
-                                <td class="px-3 py-3 text-gray-600 hidden lg:table-cell max-w-xs truncate">
-                                    {{ fila.despacho }}
+                                <td class="px-3 py-3 text-gray-600 hidden lg:table-cell">
+                                    <TextoExpandible :texto="fila.despacho" :limite="40" />
                                 </td>
-                                <td class="px-3 py-3 text-gray-600 hidden lg:table-cell max-w-xs truncate">
-                                    {{ fila.sujetosProcesales }}
+                                <td class="px-3 py-3 text-gray-600 hidden lg:table-cell">
+                                    <TextoExpandible :texto="fila.sujetosProcesales" :limite="40" />
                                 </td>
-                                <td class="px-3 py-3 text-gray-700 max-w-sm">
-                                    <span class="line-clamp-2">{{ fila.ultimaAnotacion }}</span>
+                                <td class="px-3 py-3 text-gray-700">
+                                    <TextoExpandible :texto="fila.ultimaAnotacion" :limite="70" />
                                 </td>
                             </tr>
                         </tbody>
@@ -777,10 +786,19 @@ const mostrarTablaErrores = computed(() =>
                 </h2>
             </div>
             <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-100 text-sm">
+                <table class="w-full table-fixed divide-y divide-gray-100 text-sm">
+                    <colgroup>
+                        <col class="w-8" />
+                        <col class="w-40" />
+                        <col class="w-28" />
+                        <col />
+                        <col />
+                        <col />
+                        <col class="w-20" />
+                    </colgroup>
                     <thead class="bg-gray-50">
                         <tr>
-                            <th class="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-10">#</th>
+                            <th class="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">#</th>
                             <th class="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Radicado</th>
                             <th class="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden md:table-cell">Últ. Actuación</th>
                             <th class="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden lg:table-cell">Despacho</th>
@@ -790,7 +808,6 @@ const mostrarTablaErrores = computed(() =>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100">
-                        <!-- Estado vacío cuando el filtro no tiene resultados -->
                         <tr v-if="filasVisibles.length === 0">
                             <td colspan="7" class="px-6 py-10 text-center text-gray-400 text-sm">
                                 No se encontraron resultados con ese criterio de búsqueda.
@@ -802,28 +819,28 @@ const mostrarTablaErrores = computed(() =>
                             :class="fila.registraCambio ? 'bg-green-50 hover:bg-green-100' : 'hover:bg-gray-50'"
                             class="transition"
                         >
-                            <td class="px-3 py-3 text-gray-400">{{ fila.numero }}</td>
+                            <td class="px-3 py-3 text-gray-400 text-xs">{{ fila.numero }}</td>
                             <td class="px-3 py-3">
-                                <span class="font-mono text-xs text-gray-900">{{ fila.radicado }}</span>
+                                <span class="font-mono text-xs text-gray-900 break-all">{{ fila.radicado }}</span>
                             </td>
-                            <td class="px-3 py-3 text-gray-500 hidden md:table-cell whitespace-nowrap">
+                            <td class="px-3 py-3 text-gray-500 hidden md:table-cell whitespace-nowrap text-xs">
                                 {{ fila.fechaUltimaActuacion }}
                             </td>
-                            <td class="px-3 py-3 text-gray-500 hidden lg:table-cell max-w-xs truncate">
-                                {{ fila.despacho }}
+                            <td class="px-3 py-3 text-gray-500 hidden lg:table-cell text-xs">
+                                <TextoExpandible :texto="fila.despacho" :limite="40" />
                             </td>
-                            <td class="px-3 py-3 text-gray-500 hidden lg:table-cell max-w-xs truncate">
-                                {{ fila.sujetosProcesales }}
+                            <td class="px-3 py-3 text-gray-500 hidden lg:table-cell text-xs">
+                                <TextoExpandible :texto="fila.sujetosProcesales" :limite="40" />
                             </td>
-                            <td class="px-3 py-3 text-gray-600 max-w-sm">
-                                <span class="line-clamp-2">{{ fila.ultimaAnotacion }}</span>
+                            <td class="px-3 py-3 text-gray-600 text-xs">
+                                <TextoExpandible :texto="fila.ultimaAnotacion" :limite="70" />
                             </td>
                             <td class="px-3 py-3 text-center">
                                 <span
                                     :class="fila.registraCambio
                                         ? 'bg-green-100 text-green-700 border border-green-200'
                                         : 'bg-gray-100 text-gray-500 border border-gray-200'"
-                                    class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold"
+                                    class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold"
                                 >
                                     <span v-if="fila.registraCambio">✓ Sí</span>
                                     <span v-else>— No</span>
@@ -849,7 +866,12 @@ const mostrarTablaErrores = computed(() =>
                 </h2>
             </div>
             <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-red-100 text-sm">
+                <table class="w-full table-fixed divide-y divide-red-100 text-sm">
+                    <colgroup>
+                        <col class="w-48" />
+                        <col class="w-28 hidden md:table-column" />
+                        <col />
+                    </colgroup>
                     <thead class="bg-red-50">
                         <tr>
                             <th class="px-4 py-2 text-left text-xs font-semibold text-red-500 uppercase tracking-wider">Radicado</th>
@@ -864,9 +886,11 @@ const mostrarTablaErrores = computed(() =>
                             </td>
                         </tr>
                         <tr v-for="(e, idx) in erroresVisibles" :key="idx" class="hover:bg-red-50 transition">
-                            <td class="px-4 py-2 font-mono text-xs text-gray-800">{{ e.radicado }}</td>
-                            <td class="px-4 py-2 text-gray-500 hidden md:table-cell">{{ e.idProceso }}</td>
-                            <td class="px-4 py-2 text-red-600">{{ e.error }}</td>
+                            <td class="px-4 py-2 font-mono text-xs text-gray-800 break-all">{{ e.radicado }}</td>
+                            <td class="px-4 py-2 text-gray-500 hidden md:table-cell text-xs">{{ e.idProceso }}</td>
+                            <td class="px-4 py-2 text-red-600 text-xs">
+                                <TextoExpandible :texto="e.error" :limite="60" />
+                            </td>
                         </tr>
                     </tbody>
                 </table>

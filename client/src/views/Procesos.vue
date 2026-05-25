@@ -2,6 +2,7 @@
 import { ref, computed, onMounted } from 'vue'
 import api from '../services/api'
 import BaseModal from '../components/BaseModal.vue'
+import TextoExpandible from '../components/TextoExpandible.vue'
 
 // ── Tipos ──────────────────────────────────────────────────────────────────────
 type EstadoProceso = 'activo' | 'cerrado' | 'suspendido'
@@ -241,7 +242,16 @@ onMounted(cargar)
         <!-- Tabla -->
         <div v-else class="bg-white rounded-xl border border-gray-200 overflow-hidden">
             <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-100">
+                <table class="w-full table-fixed divide-y divide-gray-100">
+                    <colgroup>
+                        <col class="w-36" />
+                        <col />
+                        <col />
+                        <col class="w-32 hidden lg:table-column" />
+                        <col class="w-24 hidden lg:table-column" />
+                        <col class="w-24" />
+                        <col class="w-20" />
+                    </colgroup>
                     <thead class="bg-gray-50">
                         <tr>
                             <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Radicado</th>
@@ -260,11 +270,15 @@ onMounted(cargar)
                             </td>
                         </tr>
                         <tr v-for="p in procesosFiltrados" :key="p.idproceso" class="hover:bg-gray-50 transition">
-                            <td class="px-4 py-3 text-sm text-gray-900 font-medium">{{ p.radicado }}</td>
-                            <td class="px-4 py-3 text-sm text-gray-700 max-w-xs truncate">{{ p.sujetosProcesales }}</td>
-                            <td class="px-4 py-3 text-sm text-gray-500 hidden md:table-cell max-w-xs truncate">{{ p.juzgado }}</td>
+                            <td class="px-4 py-3 text-xs text-gray-900 font-medium font-mono break-all">{{ p.radicado }}</td>
+                            <td class="px-4 py-3 text-sm text-gray-700">
+                                <TextoExpandible :texto="p.sujetosProcesales" :limite="50" />
+                            </td>
+                            <td class="px-4 py-3 text-sm text-gray-500 hidden md:table-cell">
+                                <TextoExpandible :texto="p.juzgado" :limite="45" />
+                            </td>
                             <td class="px-4 py-3 text-sm text-gray-500 hidden lg:table-cell">{{ p.nombreCompletoCliente ?? '—' }}</td>
-                            <td class="px-4 py-3 text-sm text-gray-500 hidden lg:table-cell">
+                            <td class="px-4 py-3 text-sm text-gray-500 hidden lg:table-cell whitespace-nowrap">
                                 {{ p.fecha_audiencia ? new Date(p.fecha_audiencia).toLocaleDateString('es-CO') : '—' }}
                             </td>
                             <td class="px-4 py-3">

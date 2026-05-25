@@ -175,7 +175,16 @@ onMounted(cargarClientes)
         <!-- Tabla -->
         <div v-else class="bg-white rounded-xl border border-gray-200 overflow-hidden">
             <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-100">
+                <table class="w-full table-fixed divide-y divide-gray-100">
+                    <colgroup>
+                        <col class="w-32" />
+                        <col />
+                        <col />
+                        <col class="w-28 hidden md:table-column" />
+                        <col class="hidden lg:table-column" />
+                        <col class="w-24 hidden lg:table-column" />
+                        <col class="w-20" />
+                    </colgroup>
                     <thead class="bg-gray-50">
                         <tr>
                             <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">No. Documento</th>
@@ -193,16 +202,12 @@ onMounted(cargarClientes)
                                 {{ searchTerm ? 'No se encontraron clientes con ese criterio.' : 'No hay clientes registrados.' }}
                             </td>
                         </tr>
-                        <tr
-                            v-for="c in clientesFiltrados"
-                            :key="c.id"
-                            class="hover:bg-gray-50 transition"
-                        >
+                        <tr v-for="c in clientesFiltrados" :key="c.id" class="hover:bg-gray-50 transition">
                             <td class="px-4 py-3 text-sm text-gray-900 font-medium">{{ c.numero_documento }}</td>
                             <td class="px-4 py-3 text-sm text-gray-900">{{ c.nombre }}</td>
                             <td class="px-4 py-3 text-sm text-gray-900">{{ c.apellidos }}</td>
                             <td class="px-4 py-3 text-sm text-gray-500 hidden md:table-cell">{{ c.telefono ?? '—' }}</td>
-                            <td class="px-4 py-3 text-sm text-gray-500 hidden lg:table-cell">{{ c.email ?? '—' }}</td>
+                            <td class="px-4 py-3 text-sm text-gray-500 hidden lg:table-cell truncate" :title="c.email ?? ''">{{ c.email ?? '—' }}</td>
                             <td class="px-4 py-3 text-sm text-gray-500 hidden lg:table-cell">{{ c.ciudad ?? '—' }}</td>
                             <td class="px-4 py-3 text-right">
                                 <div class="flex items-center justify-end gap-2">

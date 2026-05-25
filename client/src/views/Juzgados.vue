@@ -2,6 +2,7 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import api from '../services/api'
 import BaseModal from '../components/BaseModal.vue'
+import TextoExpandible from '../components/TextoExpandible.vue'
 
 // ── Tipos ──────────────────────────────────────────────────────────────────────
 interface Juzgado {
@@ -225,7 +226,15 @@ onMounted(cargar)
 
         <div v-else class="bg-white rounded-xl border border-gray-200 overflow-hidden">
             <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-100">
+                <table class="w-full table-fixed divide-y divide-gray-100">
+                    <colgroup>
+                        <col />
+                        <col class="w-36" />
+                        <col class="w-28 hidden lg:table-column" />
+                        <col class="w-32 hidden lg:table-column" />
+                        <col class="w-28 hidden lg:table-column" />
+                        <col class="w-20" />
+                    </colgroup>
                     <thead class="bg-gray-50">
                         <tr>
                             <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Juzgado</th>
@@ -243,7 +252,9 @@ onMounted(cargar)
                             </td>
                         </tr>
                         <tr v-for="j in juzgadosFiltrados" :key="j.id" class="hover:bg-gray-50 transition">
-                            <td class="px-4 py-3 text-sm text-gray-900 font-medium">{{ j.juzgado }}</td>
+                            <td class="px-4 py-3 text-sm text-gray-900 font-medium">
+                                <TextoExpandible :texto="j.juzgado" :limite="55" />
+                            </td>
                             <td class="px-4 py-3 text-sm text-gray-500 hidden md:table-cell">{{ j.juez ?? '—' }}</td>
                             <td class="px-4 py-3 text-sm text-gray-500 hidden lg:table-cell">{{ j.telefono ?? '—' }}</td>
                             <td class="px-4 py-3 text-sm text-gray-500 hidden lg:table-cell">{{ j.departamento }}</td>
