@@ -301,14 +301,21 @@ async function consultaIndividual(): Promise<void> {
 }
 
 function limpiar(): void {
-    filas.value             = []
-    erroresConsulta.value   = []
-    loteEnCurso.value       = []
-    verDetalleCambios.value = false
-    progreso.value          = { actual: 0, total: 0, conCambios: 0, loteActual: 0, lotesTotal: 0 }
-    mensajeProgreso.value   = ''
-    contadorFilas.value     = 1
+    filas.value              = []
+    erroresConsulta.value    = []
+    loteEnCurso.value        = []
+    verDetalleCambios.value  = false
+    busquedaResultados.value = ''
+    filtroPill.value         = 'todos'
+    progreso.value           = { actual: 0, total: 0, conCambios: 0, loteActual: 0, lotesTotal: 0 }
+    mensajeProgreso.value    = ''
+    contadorFilas.value      = 1
 }
+
+// ── Filtro de resultados ──────────────────────────────────────────────────────
+const busquedaResultados = ref('')
+type FiltroPill = 'todos' | 'conCambios' | 'sinCambios' | 'conError'
+const filtroPill = ref<FiltroPill>('todos')
 
 // ── Computed ──────────────────────────────────────────────────────────────────
 
@@ -324,6 +331,77 @@ const sinCambios      = computed(() => filas.value.filter(f => !f.registraCambio
 
 /** Controla la visibilidad de la tabla de detalle de cambios */
 const verDetalleCambios = ref(false)
+
+/** Filas que se muestran en la tabla principal, aplicando pill + búsqueda de texto */
+const filasVisibles = computed(() => {
+    // 1. Filtro por pill
+    let base = filas.value
+    if (filtroPill.value === 'conCambios')
+        base = base.filter(f => f.registraCambio)
+    else if (filtroPill.value === 'sinCambios')
+        base = base.filter(f => !f.registraCambio)
+    else if (filtroPill.value === 'conError')
+        return []   // La tabla de resultados se oculta; solo se muestra la de errores
+
+    // 2. Filtro por texto
+    const q = busquedaResultados.value.trim().toLowerCase()
+    if (!q) return base
+    return base.filter(f =>
+        f.radicado.toLowerCase().includes(q) ||
+        f.despacho.toLowerCase().includes(q) ||
+        f.sujetosProcesales.toLowerCase().includes(q) ||
+        f.ultimaAnotacion.toLowerCase().includes(q)
+    )
+})
+
+/** Errores filtrados por búsqueda de texto */
+const erroresVisibles = computed(() => {
+    const q = busquedaResultados.value.trim().toLowerCase()
+    if (!q) return erroresConsulta.value
+    return erroresConsulta.value.filter(e =>
+        e.radicado.toLowerCase().includes(q) ||
+        e.error.toLowerCase().includes(q)
+    )
+})
+
+/** Opciones de las pills con contador dinámico */
+const pillOptions = computed(() => [
+    {
+        val:         'todos' as FiltroPill,
+        label:       'Todos',
+        count:       filas.value.length + erroresConsulta.value.length,
+        activeClass: 'bg-blue-600 text-white',
+    },
+    {
+        val:         'conCambios' as FiltroPill,
+        label:       'Con cambios',
+        count:       conCambios.value,
+        activeClass: 'bg-green-600 text-white',
+    },
+    {
+        val:         'sinCambios' as FiltroPill,
+        label:       'Sin cambios',
+        count:       sinCambios.value,
+        activeClass: 'bg-gray-600 text-white',
+    },
+    {
+        val:         'conError' as FiltroPill,
+        label:       'Con error',
+        count:       erroresConsulta.value.length,
+        activeClass: 'bg-red-500 text-white',
+    },
+])
+
+/** ¿Mostrar la tabla de resultados? */
+const mostrarTablaResultados = computed(() =>
+    filtroPill.value !== 'conError' && filas.value.length > 0
+)
+
+/** ¿Mostrar la tabla de errores? */
+const mostrarTablaErrores = computed(() =>
+    (filtroPill.value === 'todos' || filtroPill.value === 'conError') &&
+    erroresConsulta.value.length > 0
+)
 </script>
 
 <template>
@@ -525,6 +603,51 @@ const verDetalleCambios = ref(false)
             </div>
         </div>
 
+        <!-- ── Barra de filtros de resultados ───────────────────────────────────── -->
+        <div v-if="filas.length > 0 || erroresConsulta.length > 0" class="mb-4">
+            <div class="flex flex-col sm:flex-row gap-3">
+
+                <!-- Búsqueda de texto -->
+                <div class="relative flex-1">
+                    <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none"
+                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0" />
+                    </svg>
+                    <input
+                        v-model="busquedaResultados"
+                        type="text"
+                        placeholder="Buscar en resultados por radicado, despacho, sujetos…"
+                        class="w-full pl-9 pr-9 py-2.5 rounded-lg border border-gray-300 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                    />
+                    <button v-if="busquedaResultados" @click="busquedaResultados = ''"
+                        class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Pills de estado -->
+                <div class="flex gap-2 flex-wrap items-center">
+                    <button
+                        v-for="opt in pillOptions"
+                        :key="opt.val"
+                        @click="filtroPill = opt.val"
+                        :class="[
+                            'px-3 py-1.5 rounded-lg text-sm font-medium transition whitespace-nowrap',
+                            filtroPill === opt.val
+                                ? opt.activeClass
+                                : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50',
+                        ]"
+                    >
+                        {{ opt.label }}
+                        <span class="ml-1 opacity-75 text-xs">({{ opt.count }})</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <!-- ── Tabla de detalle: procesos CON CAMBIOS ─────────────────────────── -->
         <transition
             enter-active-class="transition-all duration-300 ease-out"
@@ -603,12 +726,18 @@ const verDetalleCambios = ref(false)
             </div>
         </transition>
 
-        <!-- Tabla de resultados (todos) -->
-        <div v-if="filas.length > 0" class="bg-white rounded-xl border border-gray-200 overflow-hidden mb-5">
+        <!-- Tabla de resultados -->
+        <div v-if="mostrarTablaResultados" class="bg-white rounded-xl border border-gray-200 overflow-hidden mb-5">
             <div class="px-5 py-3 border-b border-gray-100 flex items-center justify-between">
                 <h2 class="text-sm font-semibold text-gray-700">
                     Resultados
-                    <span class="ml-1 text-gray-400 font-normal">({{ filas.length }} registros)</span>
+                    <span class="ml-1 text-gray-400 font-normal">
+                        ({{ filasVisibles.length }}
+                        <template v-if="filasVisibles.length !== filas.length">
+                            de {{ filas.length }}
+                        </template>
+                        registros)
+                    </span>
                 </h2>
             </div>
             <div class="overflow-x-auto">
@@ -625,8 +754,14 @@ const verDetalleCambios = ref(false)
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100">
+                        <!-- Estado vacío cuando el filtro no tiene resultados -->
+                        <tr v-if="filasVisibles.length === 0">
+                            <td colspan="7" class="px-6 py-10 text-center text-gray-400 text-sm">
+                                No se encontraron resultados con ese criterio de búsqueda.
+                            </td>
+                        </tr>
                         <tr
-                            v-for="fila in filas"
+                            v-for="fila in filasVisibles"
                             :key="`${fila.radicado}-${fila.idProceso}`"
                             :class="fila.registraCambio ? 'bg-green-50 hover:bg-green-100' : 'hover:bg-gray-50'"
                             class="transition"
@@ -665,11 +800,16 @@ const verDetalleCambios = ref(false)
         </div>
 
         <!-- Tabla de errores -->
-        <div v-if="erroresConsulta.length > 0" class="bg-white rounded-xl border border-red-200 overflow-hidden">
+        <div v-if="mostrarTablaErrores" class="bg-white rounded-xl border border-red-200 overflow-hidden">
             <div class="px-5 py-3 border-b border-red-100 bg-red-50">
                 <h2 class="text-sm font-semibold text-red-700">
                     Radicados con error
-                    <span class="ml-1 font-normal text-red-500">({{ erroresConsulta.length }})</span>
+                    <span class="ml-1 font-normal text-red-500">
+                        ({{ erroresVisibles.length }}
+                        <template v-if="erroresVisibles.length !== erroresConsulta.length">
+                            de {{ erroresConsulta.length }}
+                        </template>)
+                    </span>
                 </h2>
             </div>
             <div class="overflow-x-auto">
@@ -682,7 +822,12 @@ const verDetalleCambios = ref(false)
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-red-50">
-                        <tr v-for="(e, idx) in erroresConsulta" :key="idx" class="hover:bg-red-50 transition">
+                        <tr v-if="erroresVisibles.length === 0">
+                            <td colspan="3" class="px-6 py-8 text-center text-gray-400 text-sm">
+                                No se encontraron errores con ese criterio.
+                            </td>
+                        </tr>
+                        <tr v-for="(e, idx) in erroresVisibles" :key="idx" class="hover:bg-red-50 transition">
                             <td class="px-4 py-2 font-mono text-xs text-gray-800">{{ e.radicado }}</td>
                             <td class="px-4 py-2 text-gray-500 hidden md:table-cell">{{ e.idProceso }}</td>
                             <td class="px-4 py-2 text-red-600">{{ e.error }}</td>

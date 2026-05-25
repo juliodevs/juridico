@@ -48,17 +48,39 @@ app.use(
     })
 );
 
-// ── Rate limiting global: 100 req / 15 min por IP ─────────────────────────────
+// ── Rate limiting ─────────────────────────────────────────────────────────────
 // Se omite en entorno de test para evitar 429 en suites con múltiples requests
 if (process.env['NODE_ENV'] !== 'test') {
+    /**
+     * Limitador general: protege endpoints de negocio (auth, CRUD, dashboard).
+     * Excluye las rutas del proxy Rama Judicial, que tienen su propio limitador.
+     * 300 req / 15 min es suficiente para un despacho pequeño con varios usuarios.
+     */
     const globalLimiter = rateLimit({
         windowMs: 15 * 60 * 1000,
-        max: 100,
+        max: 300,
         standardHeaders: true,
         legacyHeaders: false,
         message: { error: 'Demasiadas solicitudes desde esta IP. Intenta de nuevo en 15 minutos.' },
+        // Las consultas al proxy de Rama Judicial se excluyen: cada radicado
+        // genera 2 peticiones y una consulta masiva puede sumar cientos de requests.
+        skip: (req) => req.path.startsWith('/api/v1/rama-judicial'),
     });
     app.use(globalLimiter);
+
+    /**
+     * Limitador específico del proxy Rama Judicial.
+     * Permite consultas masivas de hasta ~200 radicados (2 req × 200 = 400 req).
+     * La ventana larga de 30 min coincide con la pausa natural entre consultas.
+     */
+    const ramaJudicialLimiter = rateLimit({
+        windowMs: 30 * 60 * 1000,   // 30 minutos
+        max: 500,                    // 500 proxy-calls por ventana (~250 radicados completos)
+        standardHeaders: true,
+        legacyHeaders: false,
+        message: { error: 'Límite de consultas al proxy de Rama Judicial alcanzado. Espera 30 minutos.' },
+    });
+    app.use('/api/v1/rama-judicial', ramaJudicialLimiter);
 }
 
 // ── Parseo de body ────────────────────────────────────────────────────────────
