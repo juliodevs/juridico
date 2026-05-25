@@ -21,7 +21,8 @@ interface RJProceso {
 }
 
 interface RJActuacion {
-    anotacion:      string | null
+    actuacion:      string | null   // tipo/nombre de la actuación (ej: "SENTENCIA", "AUTO")
+    anotacion:      string | null   // texto descriptivo de la actuación
     fechaActuacion: string | null
 }
 
@@ -32,7 +33,8 @@ interface FilaResultado {
     fechaUltimaActuacion: string
     despacho:             string
     sujetosProcesales:    string
-    ultimaAnotacion:      string
+    tipoActuacion:        string   // actuacion.actuacion
+    ultimaAnotacion:      string   // actuacion.anotacion
     registraCambio:       boolean
 }
 
@@ -147,7 +149,7 @@ async function obtenerActuaciones(idProceso: number): Promise<RJActuacion> {
     const { data } = await api.get<{ actuaciones?: RJActuacion[] }>(
         `/rama-judicial/actuaciones/${idProceso}`
     )
-    return data?.actuaciones?.[0] ?? { anotacion: 'Sin actuaciones', fechaActuacion: null }
+    return data?.actuaciones?.[0] ?? { actuacion: null, anotacion: 'Sin actuaciones', fechaActuacion: null }
 }
 
 /**
@@ -208,9 +210,10 @@ async function consultarRadicado(radicado: string): Promise<void> {
             numero:               contadorFilas.value++,
             radicado,
             idProceso,
-            fechaUltimaActuacion: proceso.fechaUltimaActuacion ?? 'N/A',
-            despacho:             proceso.despacho              ?? 'N/A',
-            sujetosProcesales:    proceso.sujetosProcesales      ?? 'N/A',
+            fechaUltimaActuacion: proceso.fechaUltimaActuacion   ?? 'N/A',
+            despacho:             proceso.despacho                ?? 'N/A',
+            sujetosProcesales:    proceso.sujetosProcesales       ?? 'N/A',
+            tipoActuacion:        actuacion.actuacion             ?? 'N/A',
             ultimaAnotacion:      actuacion.anotacion             ?? 'Sin actuaciones',
             registraCambio:       cambio,
         })
@@ -387,6 +390,7 @@ const filasVisibles = computed(() => {
         f.radicado.toLowerCase().includes(q) ||
         f.despacho.toLowerCase().includes(q) ||
         f.sujetosProcesales.toLowerCase().includes(q) ||
+        f.tipoActuacion.toLowerCase().includes(q) ||
         f.ultimaAnotacion.toLowerCase().includes(q)
     )
 })
@@ -727,8 +731,9 @@ const mostrarTablaErrores = computed(() =>
                         <colgroup>
                             <col class="w-8" />
                             <col class="w-40" />
-                            <col class="w-28" />
-                            <col />
+                            <col class="w-24" />
+                            <col class="w-32" />
+                            <col class="hidden lg:table-column" />
                             <col class="hidden lg:table-column" />
                             <col />
                         </colgroup>
@@ -737,9 +742,10 @@ const mostrarTablaErrores = computed(() =>
                                 <th class="px-3 py-3 text-left text-xs font-semibold text-green-600 uppercase tracking-wider">#</th>
                                 <th class="px-3 py-3 text-left text-xs font-semibold text-green-600 uppercase tracking-wider">Radicado</th>
                                 <th class="px-3 py-3 text-left text-xs font-semibold text-green-600 uppercase tracking-wider hidden md:table-cell">Últ. Actuación</th>
+                                <th class="px-3 py-3 text-left text-xs font-semibold text-green-600 uppercase tracking-wider hidden md:table-cell">Actuación</th>
                                 <th class="px-3 py-3 text-left text-xs font-semibold text-green-600 uppercase tracking-wider hidden lg:table-cell">Despacho</th>
                                 <th class="px-3 py-3 text-left text-xs font-semibold text-green-600 uppercase tracking-wider hidden lg:table-cell">Sujetos Procesales</th>
-                                <th class="px-3 py-3 text-left text-xs font-semibold text-green-600 uppercase tracking-wider">Última Anotación</th>
+                                <th class="px-3 py-3 text-left text-xs font-semibold text-green-600 uppercase tracking-wider">Anotación</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-green-100">
@@ -753,15 +759,18 @@ const mostrarTablaErrores = computed(() =>
                                     <span class="font-mono text-xs font-semibold text-gray-900 break-all">{{ fila.radicado }}</span>
                                 </td>
                                 <td class="px-3 py-3 hidden md:table-cell whitespace-nowrap">
-                                    <span class="text-green-700 font-semibold">{{ fila.fechaUltimaActuacion }}</span>
+                                    <span class="text-green-700 font-semibold text-xs">{{ fila.fechaUltimaActuacion }}</span>
                                 </td>
-                                <td class="px-3 py-3 text-gray-600 hidden lg:table-cell">
+                                <td class="px-3 py-3 text-gray-700 hidden md:table-cell text-xs font-medium">
+                                    <TextoExpandible :texto="fila.tipoActuacion" :limite="35" />
+                                </td>
+                                <td class="px-3 py-3 text-gray-600 hidden lg:table-cell text-xs">
                                     <TextoExpandible :texto="fila.despacho" :limite="40" />
                                 </td>
-                                <td class="px-3 py-3 text-gray-600 hidden lg:table-cell">
+                                <td class="px-3 py-3 text-gray-600 hidden lg:table-cell text-xs">
                                     <TextoExpandible :texto="fila.sujetosProcesales" :limite="40" />
                                 </td>
-                                <td class="px-3 py-3 text-gray-700">
+                                <td class="px-3 py-3 text-gray-700 text-xs">
                                     <TextoExpandible :texto="fila.ultimaAnotacion" :limite="70" />
                                 </td>
                             </tr>
@@ -790,9 +799,10 @@ const mostrarTablaErrores = computed(() =>
                     <colgroup>
                         <col class="w-8" />
                         <col class="w-40" />
-                        <col class="w-28" />
-                        <col />
-                        <col />
+                        <col class="w-24" />
+                        <col class="w-32" />
+                        <col class="hidden lg:table-column" />
+                        <col class="hidden lg:table-column" />
                         <col />
                         <col class="w-20" />
                     </colgroup>
@@ -801,15 +811,16 @@ const mostrarTablaErrores = computed(() =>
                             <th class="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">#</th>
                             <th class="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Radicado</th>
                             <th class="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden md:table-cell">Últ. Actuación</th>
+                            <th class="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden md:table-cell">Actuación</th>
                             <th class="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden lg:table-cell">Despacho</th>
                             <th class="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden lg:table-cell">Sujetos Procesales</th>
-                            <th class="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Última Anotación</th>
+                            <th class="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Anotación</th>
                             <th class="px-3 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">Cambio</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100">
                         <tr v-if="filasVisibles.length === 0">
-                            <td colspan="7" class="px-6 py-10 text-center text-gray-400 text-sm">
+                            <td colspan="8" class="px-6 py-10 text-center text-gray-400 text-sm">
                                 No se encontraron resultados con ese criterio de búsqueda.
                             </td>
                         </tr>
@@ -825,6 +836,9 @@ const mostrarTablaErrores = computed(() =>
                             </td>
                             <td class="px-3 py-3 text-gray-500 hidden md:table-cell whitespace-nowrap text-xs">
                                 {{ fila.fechaUltimaActuacion }}
+                            </td>
+                            <td class="px-3 py-3 text-gray-700 hidden md:table-cell text-xs font-medium">
+                                <TextoExpandible :texto="fila.tipoActuacion" :limite="35" />
                             </td>
                             <td class="px-3 py-3 text-gray-500 hidden lg:table-cell text-xs">
                                 <TextoExpandible :texto="fila.despacho" :limite="40" />

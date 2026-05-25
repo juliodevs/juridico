@@ -7,8 +7,9 @@ const router    = useRouter()
 const route     = useRoute()
 const authStore = useAuthStore()
 
-// Sidebar colapsado en móvil
-const sidebarOpen = ref(false)
+// Sidebar: móvil (slide in/out) + desktop (colapsar/fijar)
+const sidebarOpen      = ref(false)
+const sidebarCollapsed = ref(false)
 
 function toggleSidebar(): void {
     sidebarOpen.value = !sidebarOpen.value
@@ -16,6 +17,10 @@ function toggleSidebar(): void {
 
 function closeSidebar(): void {
     sidebarOpen.value = false
+}
+
+function toggleSidebarDesktop(): void {
+    sidebarCollapsed.value = !sidebarCollapsed.value
 }
 
 async function handleLogout(): Promise<void> {
@@ -62,10 +67,13 @@ function isActive(path: string): boolean {
         <!-- ── Sidebar ────────────────────────────────────────────────────── -->
         <aside
             :class="[
-                'fixed inset-y-0 left-0 z-30 w-64 bg-white border-r border-gray-200 flex flex-col',
-                'transform transition-transform duration-300 ease-in-out',
+                'fixed inset-y-0 left-0 z-30 bg-white flex flex-col',
+                'transition-all duration-300 ease-in-out',
                 'lg:static lg:translate-x-0',
                 sidebarOpen ? 'translate-x-0' : '-translate-x-full',
+                sidebarCollapsed
+                    ? 'w-64 lg:w-0 lg:overflow-hidden'
+                    : 'w-64 border-r border-gray-200',
             ]"
         >
             <!-- Logo del despacho -->
@@ -196,6 +204,24 @@ function isActive(path: string): boolean {
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                </button>
+
+                <!-- Botón colapsar / fijar sidebar (solo en desktop) -->
+                <button
+                    class="hidden lg:flex p-2 rounded-lg text-gray-500 hover:bg-gray-100 transition mr-1"
+                    @click="toggleSidebarDesktop"
+                    :title="sidebarCollapsed ? 'Fijar panel lateral' : 'Ocultar panel lateral'"
+                    aria-label="Alternar panel lateral"
+                >
+                    <svg
+                        class="w-5 h-5 transition-transform duration-300"
+                        :class="sidebarCollapsed ? 'rotate-180' : ''"
+                        fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                    >
+                        <!-- Doble chevron izquierda → colapsar; rotado 180° → expandir -->
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
                     </svg>
                 </button>
 
