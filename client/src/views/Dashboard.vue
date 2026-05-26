@@ -201,7 +201,9 @@ const kpiCards: KpiCard[] = [
 
                 <!-- Con cambios (destacado) -->
                 <button
-                    @click="router.push('/consulta-procesos')"
+                    @click="consultaStore.ultimaConsulta.conCambios > 0
+                        ? router.push('/consulta-procesos?filtro=conCambios')
+                        : undefined"
                     class="col-span-2 sm:col-span-1 flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all"
                     :class="consultaStore.ultimaConsulta.conCambios > 0
                         ? 'border-green-300 bg-green-50 hover:bg-green-100 cursor-pointer'
@@ -240,9 +242,14 @@ const kpiCards: KpiCard[] = [
                 </div>
 
                 <!-- Con error -->
-                <div
-                    class="flex flex-col items-center justify-center p-4 rounded-xl border"
-                    :class="consultaStore.ultimaConsulta.conError > 0 ? 'border-red-200 bg-red-50' : 'border-gray-200 bg-gray-50'"
+                <button
+                    @click="consultaStore.ultimaConsulta.conError > 0
+                        ? router.push('/consulta-procesos?filtro=conError')
+                        : undefined"
+                    class="flex flex-col items-center justify-center p-4 rounded-xl border transition-all"
+                    :class="consultaStore.ultimaConsulta.conError > 0
+                        ? 'border-red-200 bg-red-50 hover:bg-red-100 cursor-pointer'
+                        : 'border-gray-200 bg-gray-50 cursor-default'"
                 >
                     <span
                         class="text-3xl font-bold"
@@ -256,7 +263,13 @@ const kpiCards: KpiCard[] = [
                     >
                         Con error
                     </span>
-                </div>
+                    <span
+                        v-if="consultaStore.ultimaConsulta.conError > 0"
+                        class="text-xs text-red-400 mt-0.5"
+                    >
+                        Ver detalle →
+                    </span>
+                </button>
             </div>
         </div>
 

@@ -1,16 +1,32 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { storeToRefs } from 'pinia'
+import { useRoute } from 'vue-router'
 import api from '../services/api'
 import { useConsultaStore } from '../stores/consultaStore'
+import type { FilaResultado, ErrorItem } from '../stores/consultaStore'
 import TextoExpandible from '../components/TextoExpandible.vue'
 
 const consultaStore = useConsultaStore()
+const route         = useRoute()
 
-// ── Tipos ──────────────────────────────────────────────────────────────────────
+// ── Estado global persistente (survives navegación entre rutas) ───────────────
+// storeToRefs mantiene la reactividad al desestructurar el store.
+const {
+    filas,
+    erroresConsulta,
+    mensajeProgreso,
+    progreso,
+    loteEnCurso,
+    consultando,
+    contadorFilas,
+} = storeToRefs(consultaStore)
+
+// ── Tipos locales (no necesitan ir al store) ──────────────────────────────────
 
 interface ProcesoInterno {
     radicado: string
-    estado:   string   // 'activo' | 'cerrado' | 'suspendido'
+    estado:   string
 }
 
 interface RJProceso {
@@ -21,66 +37,27 @@ interface RJProceso {
 }
 
 interface RJActuacion {
-    actuacion:      string | null   // tipo/nombre de la actuación (ej: "SENTENCIA", "AUTO")
-    anotacion:      string | null   // texto descriptivo de la actuación
+    actuacion:      string | null
+    anotacion:      string | null
     fechaActuacion: string | null
 }
-
-interface FilaResultado {
-    numero:               number
-    radicado:             string
-    idProceso:            number
-    fechaUltimaActuacion: string
-    despacho:             string
-    sujetosProcesales:    string
-    tipoActuacion:        string   // actuacion.actuacion
-    ultimaAnotacion:      string   // actuacion.anotacion
-    registraCambio:       boolean
-}
-
-interface ErrorItem {
-    radicado:  string
-    idProceso: string
-    error:     string
-}
-
-// NOTA: la instancia rjApi fue eliminada.
-// Las llamadas a la Rama Judicial ahora van por nuestro backend (/api/v1/rama-judicial/...)
-// para evitar el bloqueo CORS del navegador.
 
 // ── Constantes ─────────────────────────────────────────────────────────────────
 /**
  * Pausa entre radicados consecutivos (ms).
  * Procesamos 1 radicado a la vez (secuencial) para no saturar la Rama Judicial.
- * 1 500 ms de pausa + ~2-3 s de procesamiento = ~4 s por radicado promedio.
  */
-const PAUSA_ENTRE_RADICADOS = 1500
-/** Pausa entre /proceso y /actuaciones dentro del mismo radicado (ms). */
+const PAUSA_ENTRE_RADICADOS   = 1500
 const PAUSA_ENTRE_SUBREQUESTS = 600
-/**
- * Backoff mínimo cuando la Rama Judicial devuelve 403 (su rate-limit no estándar).
- * 5 000 ms da tiempo al servidor para "resetear" la ventana de throttle.
- */
-const PAUSA_POR_403 = 5000
+const PAUSA_POR_403           = 5000
 
-// ── Estado ─────────────────────────────────────────────────────────────────────
-/** Marca de tiempo de inicio de la consulta masiva (para estimar tiempo restante) */
-const tiempoInicio = ref(0)
-const filas           = ref<FilaResultado[]>([])
-const erroresConsulta = ref<ErrorItem[]>([])
-const consultando     = ref(false)
-const contadorFilas   = ref(1)
-
-// Consulta individual
+// ── Estado local del componente (NO necesita persistir) ───────────────────────
+/** Marca de tiempo de inicio (solo para el ETA, no importa si se pierde) */
+const tiempoInicio   = ref(0)
+/** Campo del formulario de consulta individual */
 const radicadoManual = ref('')
-
-// Configuración
-const diasReciente = ref(3)
-
-// Progreso
-const progreso         = ref({ actual: 0, total: 0, conCambios: 0, loteActual: 0, lotesTotal: 0 })
-const mensajeProgreso  = ref('')
-const loteEnCurso      = ref<string[]>([])
+/** Umbral de días "reciente" */
+const diasReciente   = ref(3)
 
 // ── Utilidades ─────────────────────────────────────────────────────────────────
 
@@ -237,12 +214,8 @@ async function consultarRadicado(radicado: string): Promise<void> {
 // ── Acciones ──────────────────────────────────────────────────────────────────
 
 async function consultaMasiva(): Promise<void> {
+    consultaStore.limpiarResultados()
     consultando.value     = true
-    filas.value           = []
-    erroresConsulta.value = []
-    contadorFilas.value   = 1
-    loteEnCurso.value     = []
-    progreso.value        = { actual: 0, total: 0, conCambios: 0, loteActual: 0, lotesTotal: 0 }
     mensajeProgreso.value = 'Cargando radicados del sistema…'
 
     try {
@@ -324,12 +297,10 @@ async function consultaIndividual(): Promise<void> {
     const radicado = radicadoManual.value.trim()
     if (!radicado) return
 
-    consultando.value     = true
-    filas.value           = []
-    erroresConsulta.value = []
-    contadorFilas.value   = 1
+    consultaStore.limpiarResultados()
+    consultando.value       = true
     verDetalleCambios.value = false
-    progreso.value          = { actual: 0, total: 1, conCambios: 0, loteActual: 0, lotesTotal: 0 }
+    progreso.value.total    = 1
     mensajeProgreso.value   = `Consultando ${radicado} en la Rama Judicial…`
 
     try {
@@ -355,21 +326,31 @@ async function consultaIndividual(): Promise<void> {
 }
 
 function limpiar(): void {
-    filas.value              = []
-    erroresConsulta.value    = []
-    loteEnCurso.value        = []
+    consultaStore.limpiarResultados()
     verDetalleCambios.value  = false
     busquedaResultados.value = ''
     filtroPill.value         = 'todos'
-    progreso.value           = { actual: 0, total: 0, conCambios: 0, loteActual: 0, lotesTotal: 0 }
-    mensajeProgreso.value    = ''
-    contadorFilas.value      = 1
 }
 
 // ── Filtro de resultados ──────────────────────────────────────────────────────
 const busquedaResultados = ref('')
 type FiltroPill = 'todos' | 'conCambios' | 'sinCambios' | 'conError'
 const filtroPill = ref<FiltroPill>('todos')
+
+/**
+ * Al montar el componente, si el Dashboard envió un query param ?filtro=<pill>
+ * y hay resultados en el store, aplicar ese filtro automáticamente.
+ * Esto permite que "Ver detalle" en el Dashboard pre-filtre la tabla.
+ */
+onMounted(() => {
+    const q = route.query.filtro as string | undefined
+    const pillesValidas: FiltroPill[] = ['todos', 'conCambios', 'sinCambios', 'conError']
+    if (q && pillesValidas.includes(q as FiltroPill)) {
+        if (filas.value.length > 0 || erroresConsulta.value.length > 0) {
+            filtroPill.value = q as FiltroPill
+        }
+    }
+})
 
 // ── Computed ──────────────────────────────────────────────────────────────────
 
