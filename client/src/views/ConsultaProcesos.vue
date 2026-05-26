@@ -97,6 +97,20 @@ function esReciente(fecha: string | null, dias: number): boolean {
     return diff <= dias
 }
 
+/**
+ * Formatea una fecha ISO (ej: "2026-05-21T00:00:00") en formato legible "21/05/2026".
+ * Devuelve el valor original si no es una fecha válida.
+ */
+function formatearFecha(valor: string | null | undefined): string {
+    if (!valor || valor === 'N/A') return valor ?? 'N/A'
+    const d = new Date(valor)
+    if (isNaN(d.getTime())) return valor
+    const dd = String(d.getDate()).padStart(2, '0')
+    const mm = String(d.getMonth() + 1).padStart(2, '0')
+    const yyyy = d.getFullYear()
+    return `${dd}/${mm}/${yyyy}`
+}
+
 
 async function ejecutarConReintentos<T>(
     fn: () => Promise<T>,
@@ -759,7 +773,7 @@ const mostrarTablaErrores = computed(() =>
                                     <span class="font-mono text-xs font-semibold text-gray-900 break-all">{{ fila.radicado }}</span>
                                 </td>
                                 <td class="px-3 py-3 hidden md:table-cell whitespace-nowrap">
-                                    <span class="text-green-700 font-semibold text-xs">{{ fila.fechaUltimaActuacion }}</span>
+                                    <span class="text-green-700 font-semibold text-xs">{{ formatearFecha(fila.fechaUltimaActuacion) }}</span>
                                 </td>
                                 <td class="px-3 py-3 text-gray-700 hidden md:table-cell text-xs font-medium">
                                     <TextoExpandible :texto="fila.tipoActuacion" :limite="35" />
@@ -835,7 +849,7 @@ const mostrarTablaErrores = computed(() =>
                                 <span class="font-mono text-xs text-gray-900 break-all">{{ fila.radicado }}</span>
                             </td>
                             <td class="px-3 py-3 text-gray-500 hidden md:table-cell whitespace-nowrap text-xs">
-                                {{ fila.fechaUltimaActuacion }}
+                                {{ formatearFecha(fila.fechaUltimaActuacion) }}
                             </td>
                             <td class="px-3 py-3 text-gray-700 hidden md:table-cell text-xs font-medium">
                                 <TextoExpandible :texto="fila.tipoActuacion" :limite="35" />
