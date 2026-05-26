@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '../stores/authStore'
 
@@ -52,6 +52,12 @@ const adminItems: NavItem[] = [
 function isActive(path: string): boolean {
     return route.path.startsWith(path)
 }
+
+const tituloPagina = computed<string>(() => {
+    const todos = [...navItems, ...adminItems]
+    const item  = todos.find(i => route.path.startsWith(i.path))
+    return item?.label ?? (route.name as string ?? '')
+})
 </script>
 
 <template>
@@ -227,7 +233,7 @@ function isActive(path: string): boolean {
 
                 <!-- Título de la página actual -->
                 <h2 class="text-lg font-semibold text-gray-800 hidden lg:block">
-                    {{ route.name as string ?? '' }}
+                    {{ tituloPagina }}
                 </h2>
 
                 <!-- Acciones de usuario -->

@@ -9,7 +9,17 @@ export const obtenerJuzgados = async (
 ): Promise<void> => {
     try {
         const [rows] = await pool.query(`
-            SELECT j.*, d.nombre AS departamento, c.nombre AS ciudad
+            SELECT
+                j.id,
+                j.Juzgado    AS juzgado,
+                j.Juez       AS juez,
+                j.Email      AS email,
+                j.Direccion  AS direccion,
+                j.Telefono   AS telefono,
+                j.departamento_id,
+                j.ciudad_id,
+                d.nombre AS departamento,
+                c.nombre AS ciudad
             FROM juzgados j
             JOIN departamentos d ON j.departamento_id = d.id
             JOIN ciudades c ON j.ciudad_id = c.id
